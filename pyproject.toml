@@ -1,0 +1,43 @@
+[tool.poetry]
+name = "marketplaces"
+version = "0.1.0"
+description = ""
+authors = ["andjela-r <a.radojevic01@gmail.com>"]
+readme = "README.md"
+package-mode = false
+
+[tool.poetry.dependencies]
+python = "^3.10"
+openai = "^1.52.0"
+ipywidgets = "^8.1.5"
+taipy = {extras = ["gui"], version = "^4.0.0"}
+pinecone = {extras = ["grpc"], version = "^5.3.1"}
+beautifulsoup4 = "^4.12.3"
+streamlit = "^1.39.0"
+streamlit-scrollable-textbox = "^0.0.3"
+streamlit-extras = "^0.5.0"
+utils = "^1.0.2"
+pinecone-text = "^0.9.0"
+rank-bm25 = "^0.2.2"
+tiktoken = "^0.8.0"
+git-lfs = "^1.6"
+torch = "^2.5.1"
+transformers = {extras = ["torch"], version = "^4.47.0"}
+sentence-transformers = "^3.2.1"
+cohere = "^5.11.3"
+streamlit-carousel = "^1.1.2"
+anthropic = "^0.39.0"
+urllib3 = "^2.2.3"
+sentencepiece = "^0.2.0"
+st-clickable-images = "^0.0.3"
+textstat = "^0.7.4"
+rouge-score = "^0.1.2"
+evaluate = "^0.4.3"
+accelerate = "^1.2.1"
+datasets = "^3.2.0"
+seaborn = "^0.13.2"
+loguru = "^0.7.3"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
