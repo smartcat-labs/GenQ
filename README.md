@@ -213,16 +213,20 @@ Based on the results below, the best model was achived in the 7th epoch and it r
 
 Graph showing RougeL metric during each epoch
 
-![rougeL](https://github.com/user-attachments/assets/d7ac69fc-3819-42f0-84ea-57a85bbbfbc1)
+![Alt text](https://github.com/smartcat-labs/product2query/blob/main/images/rougeL.png?raw=true)
+
 
 Graph of comparison between models for each rouge metric
 
-![output](https://github.com/user-attachments/assets/831351c9-fa43-4fb9-9d44-ad19ac5d8cae)
+![Alt text](https://github.com/smartcat-labs/product2query/blob/main/images/output.png?raw=true)
 
 Graph of comparison between rouge score distributions
 
-![output2](https://github.com/user-attachments/assets/8fb8ee9a-c223-4276-af1b-dd721309911d)
+![Alt text](https://github.com/smartcat-labs/product2query/blob/main/images/output2.png?raw=true)
 
+Graph showing average score for each metric for base and fine-tuned model
+
+![Alt text](https://github.com/smartcat-labs/product2query/blob/main/images/avg_score.png?raw=true)
 
 ### Examples
 
