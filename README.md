@@ -1,7 +1,14 @@
 <!--- BADGES: START --->
 <p align="center">
     <a href="https://smartcat.io/">
-        <img alt="Company" src="https://smartcat.io/wp-content/uploads/2023/07/logo.svg">
+        <picture>
+            <!-- Image for dark theme -->
+            <source media="(prefers-color-scheme: dark)" srcset="https://smartcat.io/wp-content/uploads/2023/07/logo.svg">
+            <!-- Image for light theme -->
+            <source media="(prefers-color-scheme: light)" srcset="https://smartcat.io/wp-content/uploads/2023/08/versionlogotype-horizontal-colorbrand-dark.png">
+            <!-- Fallback image -->
+            <img alt="Company" src="https://smartcat.io/wp-content/uploads/2023/07/logo.svg">
+        </picture>
     </a>
 </p>
 <p align="center">
