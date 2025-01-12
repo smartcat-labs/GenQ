@@ -9,10 +9,40 @@ base_model:
 - BeIR/query-gen-msmarco-t5-base-v1
 library_name: transformers
 ---
-# Product2Query Model
+<!--- BADGES: START --->
+<p align="center">
+    <a href="https://smartcat.io/">
+        <img alt="Company" src="https://smartcat.io/wp-content/uploads/2023/07/logo.svg">
+    </a>
+</p>
+<p align="center">
+    <a href="https://www.python.org/">
+        <img alt="Build" src="https://img.shields.io/badge/Made%20with-Python-1f425f.svg?color=purple">
+    </a>
+    <a href="https://github.com/smartcat-labs/product2query/blob/dev/LICENSE">
+        <img alt="License" src="https://img.shields.io/github/license/smartcat-labs/product2query.svg?color=green">
+    </a>
+    <a href="https://huggingface.co/collections/smartcat/product2query-6783f6786b250284f060918d">
+        <img alt="Models" src="https://img.shields.io/badge/%F0%9F%A4%97-Models-yellow">
+    </a>
+    <a href="https://huggingface.co/datasets/smartcat/Amazon_Sample_Metadata_2023/viewer/products2query">
+        <img alt="Dataset" src="https://img.shields.io/badge/%F0%9F%A4%97-Dataset-blue">
+    </a>
+    <!-- <a href="https://colab.research.google.com/drive/1HfutiEhHMJLXiWGT8pcipxT5L2TpYEdt?usp=sharing">
+        <img alt="Open In Colab" src="https://colab.research.google.com/assets/colab-badge.svg">
+    </a> -->
+    <a href="https://github.com/smartcat-labs">
+        <img alt="Open_Source" src="https://badges.frapsoft.com/os/v1/open-source.svg?v=103">
+    </a>
+</p>
+
+<!--- BADGES: END --->  
+# Product to Query
+Generate realistic user queries from product text.
 
 ## Introduction
-Welcome to the product2query repository! This project contains the fine-tuned model product2query, which is based on the pre-trained model BeIR/query-gen-msmarco-t5-base-v1. The fine-tuned model has been specifically designed to generate high-quality queries for e-commerce products, achieving improved performance compared to the base model.
+This project contains the fine-tuned model product2query, which is based on the pre-trained model [BeIR/query-gen-msmarco-t5-base-v1](https://huggingface.co/BeIR/query-gen-msmarco-t5-base-v1). 
+The fine-tuned model has been specifically designed to generate high-quality queries for e-commerce products, achieving improved performance compared to the base model.
 
 This repository serves as a comprehensive resource for:
 
