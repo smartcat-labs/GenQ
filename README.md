@@ -1,14 +1,3 @@
----
-datasets:
-- smartcat/Amazon_Sample_Metadata_2023
-language:
-- en
-metrics:
-- rouge
-base_model:
-- BeIR/query-gen-msmarco-t5-base-v1
-library_name: transformers
----
 <!--- BADGES: START --->
 <p align="center">
     <a href="https://smartcat.io/">
@@ -20,7 +9,7 @@ library_name: transformers
         <img alt="Build" src="https://img.shields.io/badge/Made%20with-Python-1f425f.svg?color=purple">
     </a>
     <a href="https://github.com/smartcat-labs/product2query/blob/dev/LICENSE">
-        <img alt="License" src="https://img.shields.io/github/license/smartcat-labs/product2query.svg?color=green">
+        <img alt="License" src="https://img.shields.io/github/license/smartcat-labs/product2query.svg?logo=github&style=flat&color=green">
     </a>
     <a href="https://huggingface.co/collections/smartcat/product2query-6783f6786b250284f060918d">
         <img alt="Models" src="https://img.shields.io/badge/%F0%9F%A4%97-Models-yellow">
