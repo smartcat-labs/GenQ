@@ -3,9 +3,9 @@
     <a href="https://smartcat.io/">
         <picture>
             <!-- Image for dark theme -->
-            <source media="(prefers-color-scheme: dark)" srcset="https://smartcat.io/wp-content/uploads/2023/07/logo.svg">
+            <source media="(prefers-color-scheme: dark)" srcset="https://github.com/smartcat-labs/product2query/blob/feat/readme/images/logo_smartcat_white.svg">
             <!-- Image for light theme -->
-            <source media="(prefers-color-scheme: light)" srcset="https://smartcat.io/wp-content/uploads/2023/08/versionlogotype-horizontal-colorbrand-dark.png">
+            <source media="(prefers-color-scheme: light)" srcset="https://github.com/smartcat-labs/product2query/blob/feat/readme/images/logo_smartcat_black.svg">
             <!-- Fallback image -->
             <img alt="Company" src="https://smartcat.io/wp-content/uploads/2023/07/logo.svg">
         </picture>
