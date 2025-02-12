@@ -1,15 +1,53 @@
 import nltk
-from datasets import load_dataset, DatasetDict, load_from_disk
-from transformers import DataCollatorForSeq2Seq
+from datasets import load_dataset, DatasetDict
+from transformers import AutoTokenizer
 
+from config import DataConfig
 from loguru import logger
 
 nltk.download("punkt")
 nltk.download("punkt_tab")
 
-def process_data(data, tokenizer, model):
-    
+def process_data(data: DataConfig, tokenizer: AutoTokenizer) -> DatasetDict:
+    """
+    Processes a dataset for sequence-to-sequence task.
+
+    This function loads a dataset from Hugging Face, preprocesses the input and target text 
+    using a tokenizer, tokenizes the dataset.
+
+    Args:
+        data (DataConfig): An object containing the dataset configuration, including:
+            - data.dataset_path (str): The Hugging Face dataset name.
+            - data.dataset_subset (str): The specific subset to load.
+            - data.input_text_column (List[str]): List of column names containing input text.
+            - data.label_text_column (str): Column name containing target text (labels).
+            - data.max_input_length (int): Maximum token length for inputs.
+            - data.max_target_length (int): Maximum token length for labels.
+            - data.cache_dir (Path): Path to the cache directory 
+            - data.dev (bool): Whether to run the training on a small percentage of the dataset
+        tokenizer (transformers.AutoTokenizer): The tokenizer to preprocess text.
+
+    Returns:
+        DatasetDict
+            - The processed and tokenized dataset in a `DatasetDict`.
+
+    Steps:
+        1. Load dataset from Hugging Face.
+        2. Optionally process the sample a subset of the data for training/testing.
+        3. Preprocess text by tokenizing input and labels.
+        4. Process tokenized dataset.
+        5. Remove unused columns and finalize dataset for training.
+    """
     def preprocess_function(examples):
+        """
+        Tokenizes input and target text while ensuring proper truncation.
+
+        Args:
+            examples (dict): A batch of dataset samples.
+
+        Returns:
+            dict: Tokenized inputs and labels.
+        """
         model_inputs = tokenizer(
             examples[data.input_text_column],
             max_length=data.max_input_length,
@@ -22,40 +60,31 @@ def process_data(data, tokenizer, model):
         return model_inputs
     
     
-    dataset_hf = load_dataset(data.dataset_path, name=data.dataset_subset)
     logger.info(f"Loaded dataset: {data.dataset_path}, name={data.dataset_subset}")
 
-    if data.sample:
-            train_subset = dataset_hf["train"].shuffle(seed=42).select(range(data.sample))
-            test_subset = dataset_hf["test"].shuffle(seed=42).select(range(110))
-
-            # Combine the subsets into a new DatasetDict
-            dataset_hf = DatasetDict(
-                {
-                    "train": train_subset,
-                    "test": test_subset,
-                }
-            )
-            logger.info(f'Selected {data.sample} rows for "train" and {data.test_sample} for "test"')
-            
-            
-    if data.load_tokenized_dataset:
-        tokenized_datasets = load_from_disk("tokenized_datasets")
-        logger.info("Finished loading tokenized dataset.")
+    if data.dev:
+        split_percentage = "[:1%]"
     else:
-        tokenized_datasets = dataset_hf.map(preprocess_function, batched=True)
-        logger.info("Finished preprocessing tokenized dataset.")
-        if data.save_tokenized_dataset:
-            tokenized_datasets.save_to_disk("tokenized_datasets")
-            logger.info("Tokenized dataset saved to dir tokenized_datasets.")
-            
-    data_collator = DataCollatorForSeq2Seq(tokenizer, model=model)
-    
+        split_percentage = ""   
+
+    train_subset = load_dataset(data.dataset_path, name=data.dataset_subset, cache_dir=data.cache_dir, split="train" + split_percentage)
+    test_subset = load_dataset(data.dataset_path, name=data.dataset_subset, cache_dir=data.cache_dir, split="test" + split_percentage) 
+          
+    dataset_hf = DatasetDict(
+        {
+            "train": train_subset,
+            "test": test_subset,
+        }
+    )
+    logger.info(f'Selected {len(train_subset)} rows for "train" and {len(test_subset)} for "test"') 
+
+    tokenized_datasets = dataset_hf.map(preprocess_function, batched=True)
+    logger.info("Finished preprocessing tokenized dataset.")
+
     tokenized_datasets = tokenized_datasets.remove_columns(
         dataset_hf["train"].column_names
     )
-    features = [tokenized_datasets["train"][i] for i in range(2)]
-    data_collator(features)
+    
     logger.info("Data ready for training.")
     
-    return tokenized_datasets, data_collator
+    return tokenized_datasets

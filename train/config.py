@@ -1,23 +1,21 @@
 from dataclasses import dataclass, field
 from pathlib import Path
 import yaml
+from typing import List
 
 
 @dataclass
 class DataConfig:
     """Configuration for dataset and preprocessing"""
 
-    dataset_path: str = "smartcat/Amazon_Sample_Metadata_2023"
-    dataset_subset: str = "products2query"
-    input_text_column: str = "description"
+    dataset_path: str = "smartcat/Amazon-2023-GenQ"
+    dataset_subset: str = ""
+    input_text_column: List[str] = field(default_factory=lambda: ["title", "description"]) 
     label_text_column: str = "short_query"
-    load_tokenized_dataset: bool = False
-    save_tokenized_dataset: bool = True
     max_input_length: int = 512
     max_target_length: int = 30
-    sample: int = 0
-    test_sample: int = 100
-
+    cache_dir: str = "./cache"
+    dev: bool = False
 
 def __post_init__(self):
     assert (
@@ -25,19 +23,13 @@ def __post_init__(self):
     ), "dataset_path must be a non-empty string"
     assert (
         isinstance(self.dataset_subset, str) and self.dataset_subset
-    ), "dataset_subset must be a non-empty string"
+    ), "dataset_subset must be a string"
     assert (
-        isinstance(self.input_text_column, str) and self.input_text_column
-    ), "input_text_column must be a non-empty string"
+        isinstance(self.input_text_column, List[str]) and self.input_text_column
+    ), "input_text_column must be a non-empty list"
     assert (
         isinstance(self.label_text_column, str) and self.label_text_column
     ), "label_text_column must be a non-empty string"
-    assert isinstance(
-        self.load_tokenized_dataset, bool
-    ), "load_tokenized_dataset must be a boolean"
-    assert isinstance(
-        self.save_tokenized_dataset, bool
-    ), "save_tokenized_dataset must be a boolean"
     assert (
         isinstance(self.max_input_length, int) and self.max_input_length > 0
     ), "max_input_length must be a positive integer"
@@ -45,11 +37,12 @@ def __post_init__(self):
         isinstance(self.max_target_length, int) and self.max_target_length > 0
     ), "max_target_length must be a positive integer"
     assert (
-        isinstance(self.sample, int) and self.sample >= 0
-    ), "sample must be a non-negative integer"
+        isinstance(self.cache_dir, str) and self.cache_dir
+    ), "cache_dir must be a non-empty string"
     assert (
-        isinstance(self.test_sample, int) and self.test_sample > 0
-    ), "test_sample must be a positive integer"
+        isinstance(self.dev, bool) and self.dev
+    ), "dev must be a boolean"
+
 
 
 @dataclass
@@ -71,7 +64,7 @@ class TrainConfig:
     load_best_model_at_end: bool = True
     metric_for_best_model: str = "eval_rougeL"
     greater_is_better: bool = True
-    logging_startegy: str = "epoch"
+    logging_strategy: str = "epoch"
     report_to: str = "none"
 
     def __post_init__(self):
@@ -115,7 +108,7 @@ class TrainConfig:
         assert isinstance(
             self.greater_is_better, bool
         ), "greater_is_better must be a boolean"
-        assert self.logging_startegy, "logging_startegy must be a non-empty string"
+        assert self.logging_strategy, "logging_startegy must be a non-empty string"
         assert self.report_to, "report_to must be a non-empty string"
 
 
