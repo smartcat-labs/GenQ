@@ -48,13 +48,21 @@ def process_data(data: DataConfig, tokenizer: AutoTokenizer) -> DatasetDict:
         Returns:
             dict: Tokenized inputs and labels.
         """
+        input_texts = [
+        "\n\n".join(
+            str(examples[col][i]) if col in examples and examples[col][i] is not None else ""
+            for col in data.input_text_column
+        ).strip()
+        for i in range(len(examples[data.input_text_column[0]]))  # Iterate over batch elements
+    ]
         model_inputs = tokenizer(
-            examples[data.input_text_column],
+            input_texts,
             max_length=data.max_input_length,
             truncation=True,
+            padding = "max_length"
         )
         labels = tokenizer(
-            examples[data.label_text_column], max_length=data.max_target_length, truncation=True
+            examples[data.label_text_column], max_length=data.max_target_length, truncation=True, padding = "max_length"
         )
         model_inputs["labels"] = labels["input_ids"]
         return model_inputs
