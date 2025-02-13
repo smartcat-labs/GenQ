@@ -86,12 +86,8 @@ def process_data(data: DataConfig, tokenizer: AutoTokenizer) -> DatasetDict:
     )
     logger.info(f'Selected {len(train_subset)} rows for "train" and {len(test_subset)} for "test"') 
 
-    tokenized_datasets = dataset_hf.map(preprocess_function, batched=True)
+    tokenized_datasets = dataset_hf.map(preprocess_function, batched=True, remove_columns=dataset_hf["train"].column_names)
     logger.info("Finished preprocessing tokenized dataset.")
-
-    tokenized_datasets = tokenized_datasets.remove_columns(
-        dataset_hf["train"].column_names
-    )
     
     logger.info("Data ready for training.")
     
