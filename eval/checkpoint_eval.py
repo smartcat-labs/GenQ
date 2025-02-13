@@ -3,12 +3,13 @@ import csv
 import argparse
 import evaluate
 import nltk
+import yaml
+import torch
+from typing import List, Tuple
 from transformers import AutoModelForSeq2SeqLM, AutoTokenizer
 from datasets import load_dataset
 from nltk.tokenize import sent_tokenize
 from tqdm import tqdm
-import yaml
-import torch
 from loguru import logger
 
 """
@@ -22,8 +23,10 @@ Script for evaluating query generation models and computing ROUGE scores.
     - Supports multiple model checkpoints for evaluation.
     - Computes ROUGE metrics for each generated query.
     - Saves evaluation results, including ROUGE scores, to a CSV file.
+
     Requirements:
     - Install dependencies: transformers, datasets, nltk, evaluate, torch, loguru, tqdm, pyyaml, csv.
+
     How to run:
     1. Prepare a configuration file (YAML format) specifying:
        - `input_text_column`: Column name for input descriptions (default: "description").
@@ -31,8 +34,10 @@ Script for evaluating query generation models and computing ROUGE scores.
        - `dataset`: Path to the dataset or Hugging Face dataset name.
        - `model_paths`: List of model checkpoint paths for evaluation.
        - `sample`: (Optional) Number of examples to sample from the dataset for testing.
+       - 'seed': (Optional) If sample is being used set seed to reproduce the sample.
     2. Run the script from the terminal:
        python checkpoint_eval.py eval_config.yaml
+
     Example configuration file (eval_config.yaml):
     --------------------------------------------------
     input_text_column: "description"
@@ -42,10 +47,12 @@ Script for evaluating query generation models and computing ROUGE scores.
       - "path/to/checkpoint1"
       - "path/to/checkpoint2"
     sample: 500
+    seed: 42
     --------------------------------------------------
+    
     Outputs:
     - CSV file ("generated_results.csv") containing:
-        - Input descriptions and target queries.
+        - Input titles and descriptions and target queries.
         - Generated queries for each model.
         - ROUGE-1, ROUGE-2, ROUGE-L, and ROUGE-Lsum scores.
     - Log file ("evaluation.log") with detailed execution steps and errors.
@@ -56,11 +63,82 @@ Script for evaluating query generation models and computing ROUGE scores.
     - Model paths should point to valid Hugging Face model checkpoints.
 """
 
+def parse_args() -> argparse.Namespace:
+    """
+    Parse command-line arguments.
+    
+    Returns:
+        argparse.Namespace: Parsed command-line arguments.
+    """
+    parser = argparse.ArgumentParser(description="Run the script with a config file.")
+    parser.add_argument("config_file", type=str, help="Path to the YAML config file")
+    return parser.parse_args()
+
+def load_config(config_file: str) -> dict:
+    """
+    Load configuration from YAML file.
+
+    Args:
+        config_file(str): Path to the YAML configuration file.
+
+    Returns:
+        dict: Configuration parameters
+    """
+    try:
+        with open(config_file, "r", encoding="utf-8") as f:
+            config=yaml.safe_load(f)
+        logger.info(f"Configuration loaded from '{config_file}'.")
+        return config
+    except FileNotFoundError:
+        logger.error(f"Configuration file '{config_file}' not found.")
+        raise
+    except yaml.YAMLError as e:
+        logger.error(f"Error parsing configuration file: {e}")
+        raise
+
+def get_device() -> torch.device:
+    """
+    Get the available device (GPU if available, otherwise CPU).
+
+    Returns:
+        torch.device: The device to be used.
+    """
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    logger.info(f"Using device: {device}")
+    return device
+
+def prepare_input_text(example: dict, input_columns: List[str]) -> str:
+    """
+    Combine multiple input columns into a single text string.
+
+    Args:
+        example (dict): A dataset example.
+        input_columns (List[str]): List of column names to combine.
+
+    Returns:
+        str: Combined input text.
+    """
+    texts = [str(example[col]) for col in input_columns if col in example and example[col] is not None]
+    return "\n\n".join(texts)
 
 def generate_output_and_compute_rouge(
-    model, tokenizer, description, target_query, rouge_score
-):
-    inputs = tokenizer(description, return_tensors="pt", padding=True, truncation=True)
+    model: AutoModelForSeq2SeqLM, tokenizer: AutoTokenizer, input_text: str, target_query: str, rouge_score: evaluate.EvaluationModule
+) -> Tuple[str, dict]:
+    """
+    Generate output text from from the model and compute ROUGE scores.
+
+    Args: 
+        mode: The seq2seq model.
+        tokenizer: The associated tokenizer.
+        input_text (str): The input text (combined "title" + "description").
+        target_query (str): The target query text
+        rouge_metric: The ROUGE metric object
+
+    Returns:
+        tuple: Generated text and dictionary of ROUGE scores.
+    """
+
+    inputs = tokenizer(input_text, return_tensors="pt", padding=True, truncation=True)
     generated_ids = model.generate(
         inputs["input_ids"], max_length=30, num_beams=4, early_stopping=True
     )
@@ -80,16 +158,36 @@ def generate_output_and_compute_rouge(
     return generated_text, scores
 
 
-def run_evaluation(
-    input_text_column, label_text_column, dataset, name, split, model_paths, sample
-):
-    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    logger.info(f"Device to be used is {device}")
+def run_evaluation(config: dict) -> None:
+    """
+    Run the evaluation pipeline.
+
+    Args:
+        config(dict): Configuration parameters from the YAML file.
+    
+    Returns:
+        None
+    """
+    device = get_device()
+
+    log_level = config.get("log_level", "INFO")
+    logger.add("evaluation.log", level=log_level)
+    logger.info("=======Starting Evaluation=======")
 
     # Download necessary NLTK data
     nltk.download("punkt", quiet=True)
     nltk.download("punkt_tab", quiet=True)
 
+    #Retrieve configuration parameters.
+    input_text_column = config.get("input_text_column", ["title", "description"])
+    label_text_column = config.get("label_text_column", "short_query")
+    dataset = config.get("dataset")
+    name = config.get("name")
+    split = config.get("split", "test")
+    model_paths = config.get("model_paths", [])
+    #For a sample of 500 examples the evaluation will last 15-20 minutes using CPU
+    sample = config.get("sample", 500)
+    seed = config.get("seed", 42)
     # Load the dataset from Hugging Face
     dataset_test = load_dataset(
         dataset,
@@ -100,7 +198,8 @@ def run_evaluation(
     logger.info(f"Loaded dataset {dataset}")
 
     if sample:
-        dataset_test = dataset_test.shuffle(seed=42).select(range(sample))
+        dataset_test = dataset_test.shuffle(seed=seed).select(range(sample))
+        logger.info(f"Dataset loaded with {len(dataset_test)} examples")
 
     # Load the models and tokenizers
     models = [
@@ -114,49 +213,50 @@ def run_evaluation(
     logger.info("loaded metric")
 
     # Prepare CSV file
-    output_file = "generated_results.csv"
-
-    # Write header only once
-    with open(output_file, "w", newline="", encoding="utf-8") as f:
-        writer = csv.writer(f)
-        header = [
-            "description",
-            "target_query",
-            "checkpoint_name",
-            "generated_output",
-            "rouge1",
-            "rouge2",
-            "rougeL",
-            "rougeLsum",
-        ]
-        writer.writerow(header)
-    logger.info("written header")
+    output_file = "generated_results.csv"    
+    header = [
+        "title",
+        "description",
+        "input_text",
+        "target_query",
+        "model",
+        "generated_output",
+        "rouge1",
+        "rouge2",
+        "rougeL",
+        "rougeLsum",
+    ]
 
     # Iterate over the test data with tqdm progress bar
+    with open(output_file, "w", newline="", encoding="utf-8") as f:
+        writer = csv.writer(f)
+        writer.writerow(header)
+    logger.info(f"Written header in {output_file} csv file")
+
     with open(output_file, "a", newline="", encoding="utf-8") as f:
         writer = csv.writer(f)
-        logger.info("opened csv file")
-
-        for i, example in tqdm(enumerate(dataset_test), total=len(dataset_test)):
-            description = example[input_text_column]
-            target_query = example[label_text_column]
+        for i, example in tqdm(enumerate(dataset_test), total=len(dataset_test), desc="Evaluating"):
+            input_text = prepare_input_text(example, input_text_column)
+            title = str(example.get("title", ""))
+            description = str(example.get("description", ""))
+            target_query = str(example.get(label_text_column, ""))
 
             # For each model checkpoint, generate a row in the CSV
             for j, (model, tokenizer) in enumerate(zip(models, tokenizers)):
                 checkpoint_path = model_paths[j]
-                checkpoint_name = os.path.basename(checkpoint_path)
+                model_name = os.path.basename(checkpoint_path)
 
                 # Simple check to verify name is part of the path
-                if checkpoint_name not in checkpoint_path:
+                if model_name not in checkpoint_path:
                     logger.warning(
-                        f"Checkpoint name '{checkpoint_name}' does not fully match path '{checkpoint_path}'"
+                        f"Checkpoint name '{model_name}' does not fully match path '{checkpoint_path}'"
                     )
 
                 # Generate output and compute ROUGE
                 generated_output, rouge_scores = generate_output_and_compute_rouge(
                     model=model,
                     tokenizer=tokenizer,
-                    description=description,
+                    input_text=input_text,
                     target_query=target_query,
                     rouge_score=rouge_score,
                 )
@@ -169,9 +269,11 @@ def run_evaluation(
                 rlsum = round(rouge_scores["rougeLsum"] * 100, 2)
 
                 row = [
+                    title,
                     description,
+                    input_text,
                     target_query,
-                    checkpoint_name,
+                    model_name,
                     generated_output,
                     r1,
                     r2,
@@ -180,44 +282,14 @@ def run_evaluation(
                 ]
                 writer.writerow(row)
 
-    print(f"Results have been written to '{output_file}'")
+    logger.info(f"Results have been written to '{output_file}'")
+    logger.info("=======Evaluation Completed======")
+
+def main():
+    args = parse_args()
+    config = load_config(args.config_file)
+    run_evaluation(config)
 
 
 if __name__ == "__main__":
-    logger.add("evaluation.log", level="INFO")
-    logger.info("=======Starting=======")
-
-    parser = argparse.ArgumentParser(description="Run the script with a config file.")
-    parser.add_argument("config_file", help="Path to the YAML config file")
-    args = parser.parse_args()
-
-    try:
-        with open(args.config_file) as f:
-            config = yaml.safe_load(f)
-
-        input_text_column = config.get("input_text_column", "description")
-        label_text_column = config.get("label_text_column", "short_query")
-        dataset = config.get("dataset", "smartcat/Amazon_Sample_Metadata_2023")
-        name = config.get("name", None)
-        split = config.get("split", None)
-        model_paths = config.get("model_paths", [])
-        sample = config.get("sample", 500)
-
-        logger.info("Successfully read config file.")
-
-        run_evaluation(
-            input_text_column,
-            label_text_column,
-            dataset,
-            name,
-            split,
-            model_paths,
-            sample,
-        )
-
-    except FileNotFoundError:
-        logger.warning("Config file not found.")
-    except yaml.YAMLError as e:
-        logger.error(f"Error reading the config file: {e}")
-    except Exception as e:
-        logger.error(f"Unexpected error: {e}")
+    main()

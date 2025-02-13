@@ -1,10 +1,11 @@
-input_text_column: description
+input_text_column: [title, description]
 label_text_column: short_query
-dataset: smartcat/Amazon_Sample_Metadata_2023
-name: products2query
+dataset: smartcat/Amazon-2023-GenQ
+name: ''
 split: test
 model_paths: 
-- checkpoint-99855
+- smartcat/T5-product2query-finetune-v1
 - BeIR/query-gen-msmarco-t5-base-v1
 sample: 500
+seed: 42
 
