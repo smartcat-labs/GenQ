@@ -7,9 +7,9 @@ class PrinterCallback(TrainerCallback):
     """
     A custom TrainerCallback that logs training and evaluation metrics to CSV files.
     """
-    def __init__(self):
-        self.metrics_file = "evaluation_metrics.csv"
-        self.final_metrics_file = "final_metrics.csv"
+    def __init__(self, save):
+        self.metrics_file = f"{save}/evaluation_metrics.csv"
+        self.final_metrics_file = f"{save}/final_metrics.csv"
 
         # Dictionary to store partial metrics keyed by (epoch, step)
         self.metrics_by_step = {}

@@ -68,7 +68,7 @@ def process_data(data: DataConfig, tokenizer: AutoTokenizer) -> DatasetDict:
         return model_inputs
     
     
-    logger.info(f"Loaded dataset: {data.dataset_path}, name={data.dataset_subset}")
+    logger.info(f"Loaded dataset: {data.dataset_path}")
 
     if data.dev:
         split_percentage = "[:1%]"

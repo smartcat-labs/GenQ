@@ -6,6 +6,7 @@ from transformers import (
     Seq2SeqTrainer,
     DataCollatorForSeq2Seq
 )
+from pathlib import Path
 import torch
 from loguru import logger
 import time
@@ -13,6 +14,7 @@ from config import Configuration
 from datapreprocess import process_data
 from printer_callback import PrinterCallback
 import eval as e
+from datetime import datetime
 
 """
 Script for fine-tuning a base model for text-to-query generation.
@@ -29,9 +31,9 @@ Script for fine-tuning a base model for text-to-query generation.
     1. Prepare a configuration file (YAML format) specifying:
        - Model checkpoint, training arguments, data paths, and evaluation settings.
     2. Execute the script from the terminal:
-       python prod2query_finetune.py -c config.yaml -r 'finetuned-amazon-product2query' --log_level INFO 
+       python train/prod2query_finetune.py -c train/config.yaml -r 'finetuned-amazon-product2query' --log_level INFO 
     (Optional) to run on a smaller percentage of the dataset execute the script from the terminal with:
-        python prod2query_finetune.py -c test_config.yaml -r 'finetuned-amazon-product2query' --log_level INFO
+        python train/prod2query_finetune.py -c train/test_config.yaml -r 'finetuned-amazon-product2query' --log_level INFO
     Example configuration file (config.yaml):
     --------------------------------------------------
     data:
@@ -113,11 +115,11 @@ def run_training(args: argparse.Namespace) -> None:
     start_time = time.time()
     config = Configuration.from_yaml(args.config)
 
-    config.to_yaml("config.yaml")  # Save the configuration
+    config.to_yaml(f"{save_path}/config.yaml")  # Save the configuration
 
-    logger.add("finetuning.log", level=args.log_level)
+    logger.add(f"{save_path}/finetuning.log", level=args.log_level)
     logger.info("=======Starting=======")
-    logger.info("Configuration saved to 'config.yaml'")
+    logger.info(f"Configuration saved to '{save_path}/config.yaml'")
 
     data = config.data
     train = config.train
@@ -137,7 +139,7 @@ def run_training(args: argparse.Namespace) -> None:
     logger.info(f"Logging every {logging_steps} steps")
 
     args = Seq2SeqTrainingArguments(
-        output_dir=f"{train.output_dir_name}",
+        output_dir=f"{save_path}/{train.output_dir_name}",
         eval_strategy=train.evaluation_strategy,
         learning_rate=train.learning_rate,
         per_device_train_batch_size=train.batch_size,
@@ -168,7 +170,7 @@ def run_training(args: argparse.Namespace) -> None:
         data_collator=DataCollatorForSeq2Seq(tokenizer, model=model),
         tokenizer=tokenizer,
         compute_metrics=compute_metrics_wrapper,
-        callbacks=[PrinterCallback()],
+        callbacks=[PrinterCallback(save=save_path)],
     )
 
     logger.info("Trainer initialized. 🚀 Starting training now!(^o^)")
@@ -180,5 +182,10 @@ def run_training(args: argparse.Namespace) -> None:
     logger.success(f"Training completed in {elapsed_time:.2f} seconds ✅ ^ω^")
 
 if __name__ == "__main__":
+    date_now = datetime.now().strftime("%d-%m")
+    save_path = Path(f"train/runs/{date_now}")
+
+    save_path.mkdir(parents = True, exist_ok = True)
+
     args = parse_args()
     run_training(args)

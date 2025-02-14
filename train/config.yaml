@@ -11,8 +11,8 @@ train:
   output_dir_name: finetuned-amazon-product2query
   model_checkpoint: BeIR/query-gen-msmarco-t5-base-v1
   metrics: rouge
-  batch_size: 16
-  num_train_epochs: 1
+  batch_size: 32
+  num_train_epochs: 8
   evaluation_strategy: epoch
   save_strategy: epoch
   learning_rate: 5.6e-05
