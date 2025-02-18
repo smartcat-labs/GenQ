@@ -137,8 +137,8 @@ def generate_output_and_compute_rouge(
     Returns:
         tuple: Generated text and dictionary of ROUGE scores.
     """
-
-    inputs = tokenizer(input_text, return_tensors="pt", padding=True, truncation=True)
+    device = next(model.parameters()).device
+    inputs = tokenizer(input_text, return_tensors="pt", padding=True, truncation=True).to(device)
     generated_ids = model.generate(
         inputs["input_ids"], max_length=30, num_beams=4, early_stopping=True
     )
@@ -186,7 +186,7 @@ def run_evaluation(config: dict) -> None:
     split = config.get("split", "test")
     model_paths = config.get("model_paths", [])
     #For a sample of 500 examples the evaluation will last 15-20 minutes using CPU
-    sample = config.get("sample", 500)
+    sample = config.get("sample") #500)
     seed = config.get("seed", 42)
     # Load the dataset from Hugging Face
     dataset_test = load_dataset(
