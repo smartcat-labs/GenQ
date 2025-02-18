@@ -58,11 +58,10 @@ def process_data(data: DataConfig, tokenizer: AutoTokenizer) -> DatasetDict:
         model_inputs = tokenizer(
             input_texts,
             max_length=data.max_input_length,
-            truncation=True,
-            padding = "max_length"
+            truncation=True
         )
         labels = tokenizer(
-            examples[data.label_text_column], max_length=data.max_target_length, truncation=True, padding = "max_length"
+            examples[data.label_text_column], max_length=data.max_target_length, truncation=True
         )
         model_inputs["labels"] = labels["input_ids"]
         return model_inputs
