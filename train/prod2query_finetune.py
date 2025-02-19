@@ -15,6 +15,7 @@ from datapreprocess import process_data
 from printer_callback import PrinterCallback
 import eval as e
 from datetime import datetime
+from transformers import set_seed
 
 """
 Script for fine-tuning a base model for text-to-query generation.
@@ -31,9 +32,9 @@ Script for fine-tuning a base model for text-to-query generation.
     1. Prepare a configuration file (YAML format) specifying:
        - Model checkpoint, training arguments, data paths, and evaluation settings.
     2. Execute the script from the terminal:
-       python train/prod2query_finetune.py -c train/config.yaml -r 'finetuned-amazon-product2query' --log_level INFO 
+       python train/prod2query_finetune.py -c train/config.yaml -o 'finetuned-amazon-product2query' --log_level INFO 
     (Optional) to run on a smaller percentage of the dataset execute the script from the terminal with:
-        python train/prod2query_finetune.py -c train/test_config.yaml -r 'finetuned-amazon-product2query' --log_level INFO
+        python train/prod2query_finetune.py -c train/test_config.yaml -o 'finetuned-amazon-product2query' --log_level INFO
     Example configuration file (config.yaml):
     --------------------------------------------------
     data:
@@ -86,7 +87,7 @@ def parse_args() -> argparse.Namespace:
         "-c", "--config", type=str, required=True, help="Path to the config file"
     )
     parser.add_argument(
-        "-r", "--output_path", type=str, default="finetuned-amazon-product2query", help="Model output path"
+        "-o", "--output_path", type=str, default="finetuned-amazon-product2query", help="Model output path"
     )
     parser.add_argument(
         "--log_level",
@@ -101,12 +102,18 @@ def parse_args() -> argparse.Namespace:
 
 def get_device() -> torch.device:
     """
-    Returns the best available device (GPU or CPU).
+    Returns the best available device (CUDA, MPS, or CPU).
 
     Returns:
-        torch.device: The device (CUDA or CPU) for model training.
+        torch.device: The selected device for model training.
     """
-    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    if torch.cuda.is_available():
+        device = torch.device("cuda")
+    elif torch.backends.mps.is_available():
+        device = torch.device("mps")
+    else:
+        device = torch.device("cpu")
+
     logger.info(f"Using device: {device}")
     return device
 
@@ -122,6 +129,7 @@ def run_training(args: argparse.Namespace) -> None:
     logger.info(f"Configuration saved to '{save_path}/config.yaml'")
 
     data = config.data
+    set_seed(seed=data.seed)
     train = config.train
 
     model = AutoModelForSeq2SeqLM.from_pretrained(train.model_checkpoint)
@@ -170,7 +178,7 @@ def run_training(args: argparse.Namespace) -> None:
         data_collator=DataCollatorForSeq2Seq(tokenizer, model=model),
         tokenizer=tokenizer,
         compute_metrics=compute_metrics_wrapper,
-        callbacks=[PrinterCallback(save=save_path)],
+        callbacks=[PrinterCallback(save_dir=save_path)],
     )
 
     logger.info("Trainer initialized. 🚀 Starting training now!(^o^)")
@@ -178,12 +186,15 @@ def run_training(args: argparse.Namespace) -> None:
     # Start training
     trainer.train()
 
+    final_output_dir = f"{save_path}/{train.output_dir_name}/final"
+    model.save_pretrained(final_output_dir)
+
     elapsed_time = time.time() - start_time
     logger.success(f"Training completed in {elapsed_time:.2f} seconds ✅ ^ω^")
 
 if __name__ == "__main__":
-    date_now = datetime.now().strftime("%d-%m")
-    save_path = Path(f"train/runs/{date_now}")
+    dt = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+    save_path = Path(f"train/runs/{dt}")
 
     save_path.mkdir(parents = True, exist_ok = True)
 

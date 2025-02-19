@@ -49,12 +49,10 @@ def process_data(data: DataConfig, tokenizer: AutoTokenizer) -> DatasetDict:
             dict: Tokenized inputs and labels.
         """
         input_texts = [
-        "\n\n".join(
-            str(examples[col][i]) if col in examples and examples[col][i] is not None else ""
-            for col in data.input_text_column
-        ).strip()
-        for i in range(len(examples[data.input_text_column[0]]))  # Iterate over batch elements
-    ]
+            "\n\n".join(filter(None, [examples.get(col, [None])[i] for col in data.input_text_column])).strip()
+            for i in range(len(examples[data.input_text_column[0]]))
+            ]
+        
         model_inputs = tokenizer(
             input_texts,
             max_length=data.max_input_length,
@@ -74,15 +72,12 @@ def process_data(data: DataConfig, tokenizer: AutoTokenizer) -> DatasetDict:
     else:
         split_percentage = ""   
 
-    train_subset = load_dataset(data.dataset_path, name=data.dataset_subset, cache_dir=data.cache_dir, split="train" + split_percentage)
-    test_subset = load_dataset(data.dataset_path, name=data.dataset_subset, cache_dir=data.cache_dir, split="test" + split_percentage) 
-          
-    dataset_hf = DatasetDict(
-        {
-            "train": train_subset,
-            "test": test_subset,
-        }
-    )
+    train_subset, test_subset = load_dataset(data.dataset_path, name=data.dataset_subset, cache_dir=data.cache_dir, split=["train" + split_percentage, "test" + split_percentage])
+
+    dataset_hf = DatasetDict({
+    "train": train_subset,
+    "test": test_subset
+    })
     logger.info(f'Selected {len(train_subset)} rows for "train" and {len(test_subset)} for "test"') 
 
     tokenized_datasets = dataset_hf.map(preprocess_function, batched=True, remove_columns=dataset_hf["train"].column_names)

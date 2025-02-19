@@ -7,6 +7,7 @@ data:
   max_target_length: 30
   cache_dir: ./cache
   dev: false
+  seed: 0
 train:
   output_dir_name: finetuned-amazon-product2query
   model_checkpoint: BeIR/query-gen-msmarco-t5-base-v1
