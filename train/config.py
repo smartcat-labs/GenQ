@@ -16,6 +16,7 @@ class DataConfig:
     max_target_length: int = 30
     cache_dir: str = "./cache"
     dev: bool = False
+    seed: int = 0
 
 def __post_init__(self):
     assert (
@@ -42,6 +43,10 @@ def __post_init__(self):
     assert (
         isinstance(self.dev, bool) and self.dev
     ), "dev must be a boolean"
+    assert (
+        isinstance(self.seed, int) and self.seed
+    ), "seed must be a integer"
+
 
 
 
