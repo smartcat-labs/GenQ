@@ -15,6 +15,7 @@ class DataConfig:
     max_input_length: int = 512
     max_target_length: int = 30
     cache_dir: str = "./cache"
+    extend_columns: List[str] = field(default_factory=lambda: ["title"])
     dev: bool = False
 
 def __post_init__(self):
@@ -39,6 +40,9 @@ def __post_init__(self):
     assert (
         isinstance(self.cache_dir, str) and self.cache_dir
     ), "cache_dir must be a non-empty string"
+    assert (
+        isinstance(self.extend_columns, bool) and self.extend_columns
+    ), "extend_columns must be a non-empty list"
     assert (
         isinstance(self.dev, bool) and self.dev
     ), "dev must be a boolean"

@@ -6,6 +6,7 @@ data:
   max_input_length: 512
   max_target_length: 30
   cache_dir: ./cache
+  extend_columns: []
   dev: true
 train:
   output_dir_name: finetuned-amazon-product2query
