@@ -1,11 +1,11 @@
 data:
   dataset_path: smartcat/Amazon-2023-GenQ
-  dataset_subset: ''
+  dataset_subset: null
   input_text_column: [title, description]
   label_text_column: short_query
   max_input_length: 512
   max_target_length: 30
-  cache_dir: ./cache
+  cache_dir: null
   dev: true
   seed: 0
 train:

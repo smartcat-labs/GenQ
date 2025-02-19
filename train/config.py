@@ -9,12 +9,12 @@ class DataConfig:
     """Configuration for dataset and preprocessing"""
 
     dataset_path: str = "smartcat/Amazon-2023-GenQ"
-    dataset_subset: str = ""
+    dataset_subset: str = None
     input_text_column: List[str] = field(default_factory=lambda: ["title", "description"]) 
     label_text_column: str = "short_query"
     max_input_length: int = 512
     max_target_length: int = 30
-    cache_dir: str = "./cache"
+    cache_dir: Path = None
     dev: bool = False
     seed: int = 0
 
@@ -22,9 +22,9 @@ def __post_init__(self):
     assert (
         isinstance(self.dataset_path, str) and self.dataset_path
     ), "dataset_path must be a non-empty string"
-    assert (
-        isinstance(self.dataset_subset, str) and self.dataset_subset
-    ), "dataset_subset must be a string"
+    assert self.dataset_subset is None or (
+        isinstance(self.dataset_subset, str)
+    ), "dataset_subset must be a string or None"
     assert (
         isinstance(self.input_text_column, List[str]) and self.input_text_column
     ), "input_text_column must be a non-empty list"
@@ -37,9 +37,12 @@ def __post_init__(self):
     assert (
         isinstance(self.max_target_length, int) and self.max_target_length > 0
     ), "max_target_length must be a positive integer"
-    assert (
-        isinstance(self.cache_dir, str) and self.cache_dir
-    ), "cache_dir must be a non-empty string"
+
+    if isinstance(self.output_dir_name, str):
+            self.output_dir_name = Path(self.cache_dir)
+
+    assert self.cache_dir is None or self.cache_dir, "cache_dir must be a string or None"
+    
     assert (
         isinstance(self.dev, bool) and self.dev
     ), "dev must be a boolean"
