@@ -5,11 +5,13 @@ import evaluate
 import nltk
 import yaml
 import torch
+from datetime import datetime
 from typing import List, Tuple
 from transformers import AutoModelForSeq2SeqLM, AutoTokenizer
 from datasets import load_dataset
 from nltk.tokenize import sent_tokenize
 from tqdm import tqdm
+from pathlib import Path
 from loguru import logger
 
 """
@@ -36,7 +38,7 @@ Script for evaluating query generation models and computing ROUGE scores.
        - `sample`: (Optional) Number of examples to sample from the dataset for testing.
        - 'seed': (Optional) If sample is being used set seed to reproduce the sample.
     2. Run the script from the terminal:
-       python checkpoint_eval.py eval_config.yaml
+       python eval/checkpoint_eval.py config/eval_config.yaml
 
     Example configuration file (eval_config.yaml):
     --------------------------------------------------
@@ -170,8 +172,17 @@ def run_evaluation(config: dict) -> None:
     """
     device = get_device()
 
+    dt = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+    output_path = Path(f"eval/runs/{dt}")
+    output_path.mkdir(parents=True, exist_ok=True)
+
     log_level = config.get("log_level", "INFO")
-    logger.add("evaluation.log", level=log_level)
+    logger.add(f"{output_path}/evaluation.log", level=log_level)
+
+    with open(f"{output_path}/eval_config.yaml", 'w') as file:
+        yaml.dump(config, file, default_flow_style=False)
+    logger.info(f"Configuration saved to '{output_path}/eval_config.yaml'")
+
     logger.info("=======Starting Evaluation=======")
 
     # Download necessary NLTK data
@@ -206,14 +217,15 @@ def run_evaluation(config: dict) -> None:
         AutoModelForSeq2SeqLM.from_pretrained(path).to(device) for path in model_paths
     ]
     tokenizers = [AutoTokenizer.from_pretrained(path) for path in model_paths]
-    logger.info("loaded all models")
+    logger.info("Loaded all models")
 
     # ROUGE scorer setup
     rouge_score = evaluate.load("rouge")
-    logger.info("loaded metric")
+    logger.info("Loaded metric")
 
     # Prepare CSV file
-    output_file = "generated_results.csv"    
+    output_file = (f"{output_path}/generated_results.csv")    
+
     header = [
         "title",
         "description",
