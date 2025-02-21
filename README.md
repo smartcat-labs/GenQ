@@ -35,19 +35,24 @@
 </p>
 
 <!--- BADGES: END --->  
-# Product to Query
-Generate realistic user queries from product text.
+# GenQ
+
+🤖 ✨ 🔍 Generate precise, realistic user-focused search queries from product text 🛒 🚀 📊
 
 ## Introduction
-This project contains the fine-tuned model product2query. 
-The fine-tuned model has been specifically designed to generate high-quality queries for e-commerce products, achieving improved performance compared to the base model.
+This project contains the scripts used to creaate the fine-tuned model GenQ. 
+This model has been specifically designed to generate high-quality queries for e-commerce products, achieving improved performance compared to the base model.
 
 This repository serves as a comprehensive resource for:
 
 **Data Preprocessing**: Scripts and utilities for preparing the dataset used in fine-tuning, ensuring a robust and effective training process.  
+
 **Model Fine-Tuning**: Code and configurations for fine-tuning the base model on the customized dataset.  
+
 **Performance Insights**: Configurations and examples showcasing the model's performance improvements and applications.  
-By leveraging the fine-tuned product2query model, e-commerce platforms can enhance search quality and generate more relevant queries tailored to their products.   Whether you're looking to understand the data preparation process, fine-tune your own model, or integrate this solution into your workflow, this repository has you covered.  
+
+By leveraging the GenQ model, e-commerce platforms can enhance search quality and generate more relevant queries tailored to their products.  
+Whether you're looking to understand the data preparation process, fine-tune your own model, or integrate this solution into your workflow, this repository has you covered.  
 
 ## Table of Contents
 - [Introduction](#introduction)
@@ -63,13 +68,21 @@ By leveraging the fine-tuned product2query model, e-commerce platforms can enhan
   - [Examples](#examples)
   - [How to Use](#how-to-use)
 
-### Model Details
+## Model Details
 
 <strong>Model Name:</strong> Fine-Tuned Query-Generation Model <br>
 <strong>Model Type:</strong> Text-to-Text Transformer <br>
 <strong>Architecture:</strong> Based on a pre-trained transformer model: [BeIR/query-gen-msmarco-t5-base-v1](https://huggingface.co/BeIR/query-gen-msmarco-t5-base-v1) <br>
-<strong>Primary Use Case:</strong> Generating accurate and relevant search queries from product descriptions for e-commerce applications.<br>
+<strong>Primary Use Case:</strong> Generating accurate and relevant search queries from product descriptions<br>
 <strong>Dataset:</strong> [smartcat/Amazon-2023-GenQ](https://huggingface.co/datasets/smartcat/Amazon-2023-GenQ)<br>
+   
+<br>
+
+There are three models in our collection that are trained differently:   
+
+**T5-GenQ-T-v1**: Trained on only the product titles  
+**T5-GenQ-TD-v1**: Trained on titles + descriptions of the products  
+**T5-GenQ-TDE-v1**: Trained on titles + descriptions of the products and a set of products with titles only (2x of the dataset)
 
 
 ## Training
@@ -92,150 +105,49 @@ By leveraging the fine-tuned product2query model, e-commerce platforms can enhan
 </ul>
 
 ### Metrics Used:
-<strong>ROUGE-L:</strong> Measures the longest common subsequence between the target query and the generated query to evaluate alignment and relevance.
+**[ROUGE](https://en.wikipedia.org/wiki/ROUGE_(metric))**, or **R**ecall-**O**riented **U**nderstudy for **G**isting **E**valuation, is a set of metrics used for evaluating automatic summarization and machine translation in NLP. The metrics compare an automatically produced summary or translation against a reference or a set of references (human-produced) summary or translation. ROUGE metrics range between 0 and 1, with higher scores indicating higher similarity between the automatically produced summary and the reference.  
 
-Based on the results below, the best model was achived in the 7th epoch and it represents the model that is chosen for the final model.
+In our evaluation, ROUGE scores are scaled to resemble percentages for better interpretability. The metric used in the training was ROUGE-L.
+
+The results of our model variations are:
 
 <table border="1" class="dataframe">
-  <thead>
-    <tr style="text-align: center;">
-      <th>epoch</th>
-      <th>step</th>
-      <th>loss</th>
-      <th>grad_norm</th>
-      <th>learning_rate</th>
-      <th>eval_loss</th>
-      <th>eval_rouge1</th>
-      <th>eval_rouge2</th>
-      <th>eval_rougeL</th>
-      <th>eval_rougeLsum</th>
-      <th>eval_runtime</th>
-      <th>eval_samples_per_second</th>
-      <th>eval_steps_per_second</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <td>1.0</td>
-      <td>14265</td>
-      <td>1.9226</td>
-      <td>11.211930</td>
-      <td>0.000049</td>
-      <td>1.681115</td>
-      <td>56.6365</td>
-      <td>34.2513</td>
-      <td>56.1039</td>
-      <td>56.0981</td>
-      <td>712.4442</td>
-      <td>35.594</td>
-      <td>2.225</td>
-    </tr>
-    <tr>
-      <td>2.0</td>
-      <td>28530</td>
-      <td>1.6894</td>
-      <td>5.820090</td>
-      <td>0.000042</td>
-      <td>1.606815</td>
-      <td>57.6006</td>
-      <td>35.2668</td>
-      <td>57.0582</td>
-      <td>57.0577</td>
-      <td>725.4298</td>
-      <td>34.957</td>
-      <td>2.185</td>
-    </tr>
-    <tr>
-      <td>3.0</td>
-      <td>42795</td>
-      <td>1.5767</td>
-      <td>5.419910</td>
-      <td>0.000035</td>
-      <td>1.572992</td>
-      <td>58.1900</td>
-      <td>36.0225</td>
-      <td>57.6002</td>
-      <td>57.6122</td>
-      <td>729.0902</td>
-      <td>34.782</td>
-      <td>2.174</td>
-    </tr>
-    <tr>
-      <td>4.0</td>
-      <td>57060</td>
-      <td>1.4953</td>
-      <td>7.541308</td>
-      <td>0.000028</td>
-      <td>1.551169</td>
-      <td>58.6074</td>
-      <td>36.3093</td>
-      <td>58.0192</td>
-      <td>58.0383</td>
-      <td>724.4636</td>
-      <td>35.004</td>
-      <td>2.188</td>
-    </tr>
-    <tr>
-      <td>5.0</td>
-      <td>71325</td>
-      <td>1.4338</td>
-      <td>4.890110</td>
-      <td>0.000021</td>
-      <td>1.540994</td>
-      <td>58.5639</td>
-      <td>36.4092</td>
-      <td>57.9490</td>
-      <td>57.9669</td>
-      <td>726.4090</td>
-      <td>34.910</td>
-      <td>2.182</td>
-    </tr>
-    <tr>
-      <td>6.0</td>
-      <td>85590</td>
-      <td>1.3857</td>
-      <td>7.108903</td>
-      <td>0.000014</td>
-      <td>1.536733</td>
-      <td>58.6788</td>
-      <td>36.4511</td>
-      <td>58.0754</td>
-      <td>58.0852</td>
-      <td>725.5978</td>
-      <td>34.949</td>
-      <td>2.184</td>
-    </tr>
-    <tr style="text-decoration: underline;">
-      <td>7.0</td>
-      <td>99855</td>
-      <td>1.3504</td>
-      <td>5.902568</td>
-      <td>0.000007</td>
-      <td>1.536227</td>
-      <td>58.8399</td>
-      <td>36.6104</td>
-      <td>58.2366</td>
-      <td>58.2533</td>
-      <td>722.5710</td>
-      <td>35.096</td>
-      <td>2.194</td>
-    </tr>
-    <tr>
-      <td>8.0</td>
-      <td>114120</td>
-      <td>1.3269</td>
-      <td>6.621144</td>
-      <td>0.000000</td>
-      <td>1.540336</td>
-      <td>58.8344</td>
-      <td>36.5932</td>
-      <td>58.2187</td>
-      <td>58.2316</td>
-      <td>723.1026</td>
-      <td>35.070</td>
-      <td>2.192</td>
-    </tr>
-  </tbody>
+  <tr style="text-align: center;">
+    <th>Model</th>
+    <th>Epoch</th>
+    <th>Step</th>
+    <th>ROUGE-1</th>
+    <th>ROUGE-2</th>
+    <th>ROUGE-L</th>
+    <th>ROUGE-Lsum</th>
+  </tr>
+  <tr>
+    <td><b>T5-GenQ-T-v1</b></td>
+    <td>7.0</td>
+    <td>29995</td>
+    <td>75.2151</td>
+    <td>54.8735</td>
+    <td><b>74.5142</b></td>
+    <td>74.5262</td>
+  </tr>
+  <tr>
+    <td><b>T5-GenQ-TD-v1</b></td>
+    <td>8.0</td>
+    <td>34280</td>
+    <td>78.2570</td>
+    <td>58.9586</td>
+    <td><b>77.5308</b></td>
+    <td>77.5466</td>
+  </tr>
+  <tr>
+    <td><b>T5-GenQ-TDE-v1</b></td>
+    <td>8.0</td>
+    <td>68552</td>
+    <td>76.9075</td>
+    <td>57.0980</td>
+    <td><b>76.1464</b></td>
+    <td>76.1502</td>
+  </tr>
 </table>
 
 ## Setup
@@ -257,15 +169,15 @@ to install all necessary dependencies
 ### Run training
 For running the training, prepare the **config.yaml** file. If you don't want to modify it you can simply run the training with:
 ```bash
-python train/prod2query_finetune.py \  
-  -c train/config.yaml \  
+python train/train.py \  
+  -c config/config.yaml \  
   -o 'finetuned-amazon-product2query' \  
   --log_level INFO
 ```
 If you want to test out the training on a sample of the dataset, set the ```dev``` flag to ```True``` in the **config.yaml** or simply run the training with:
 ```bash
-python train/prod2query_finetune.py \  
-  -c train/test_config.yaml \  
+python train/train.py \  
+  -c config/test_config.yaml \  
   -o 'finetuned-amazon-product2query' \  
   --log_level INFO
 ```
@@ -276,13 +188,13 @@ To check out each checkpoint, you can run the evaluation.
 ### Evaluation
 The evaluation consists of generating queries with two models and calculating the results of each ROUGE metric. In our case, we ran the evaluation with the pre-trained model and our fine-tuned model.  
 
-For running the evaluation, prepare the **eval_config.yaml** file. You must set the ```model_paths``` in the file to you checkpoint path to test out your model. If you don't want to modify it you can simply run the evaluation with:
+For running the evaluation, prepare the **eval_config.yaml** file. You must set the ```model_paths``` in the file to your checkpoint path to test out your model. If you don't want to modify the file you can simply run the evaluation with:
 ```bash
-python checkpoint_eval.py eval_config.yaml
+python eval/checkpoint_eval.py config/eval_config.yaml
 ```
 This will run the evaluation with our fine-tuned model by default.   
 
-After it's finished, you can look at the results in the **generated_results.csv** file.   
+After it's finished, you can look at the results in the **generated_results.csv** saved to eval\runs\date_time\ by default.   
 For further analysis use the **results_analysis.ipynb** notebook with your model to see specific cases where your model had better/worse results.
 
 ## Usage
