@@ -9,12 +9,11 @@ from transformers import (
 from pathlib import Path
 import torch
 from loguru import logger
-import time
+from datetime import datetime
 from config import Configuration
 from datapreprocess import process_data
 from printer_callback import PrinterCallback
 import eval as e
-from datetime import datetime
 from transformers import set_seed
 
 """
@@ -119,7 +118,7 @@ def get_device() -> torch.device:
 
 def run_training(args: argparse.Namespace) -> None:
     """Main function to run training pipeline."""
-    start_time = time.time()
+    start_time = datetime.now().astimezone()
     config = Configuration.from_yaml(args.config)
 
     config.to_yaml(f"{save_path}/config.yaml")  # Save the configuration
@@ -189,8 +188,8 @@ def run_training(args: argparse.Namespace) -> None:
     final_output_dir = f"{save_path}/{train.output_dir_name}/final"
     model.save_pretrained(final_output_dir)
 
-    elapsed_time = time.time() - start_time
-    logger.success(f"Training completed in {elapsed_time:.2f} seconds ✅ ^ω^")
+    elapsed_time = datetime.now().astimezone() - start_time
+    logger.success(f"Training completed in {str(elapsed_time).split('.')[0]} seconds ✅ ^ω^")
 
 if __name__ == "__main__":
     dt = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
