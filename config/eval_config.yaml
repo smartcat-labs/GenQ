@@ -1,7 +1,7 @@
 input_text_column: [title, description]
 label_text_column: short_query
 dataset: smartcat/Amazon-2023-GenQ
-name: ''
+name: null
 split: test
 model_paths: 
 - smartcat/T5-product2query-finetune-v1
