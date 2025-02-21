@@ -7,13 +7,12 @@ from transformers import (
     DataCollatorForSeq2Seq
 )
 from pathlib import Path
-import torch
 from loguru import logger
 from datetime import datetime
 from config import Configuration
 from datapreprocess import process_data
-from printer_callback import PrinterCallback
-import eval as e
+from eval import compute_metrics
+from utils import PrinterCallback, get_device
 from transformers import set_seed
 
 """
@@ -31,9 +30,9 @@ Script for fine-tuning a base model for text-to-query generation.
     1. Prepare a configuration file (YAML format) specifying:
        - Model checkpoint, training arguments, data paths, and evaluation settings.
     2. Execute the script from the terminal:
-       python train/prod2query_finetune.py -c train/config.yaml -o 'finetuned-amazon-product2query' --log_level INFO 
+       python train/train.py -c config/config.yaml -o 'finetuned-amazon-product2query' --log_level INFO 
     (Optional) to run on a smaller percentage of the dataset execute the script from the terminal with:
-        python train/prod2query_finetune.py -c train/test_config.yaml -o 'finetuned-amazon-product2query' --log_level INFO
+        python train/train.py -c config/test_config.yaml -o 'finetuned-amazon-product2query' --log_level INFO
     Example configuration file (config.yaml):
     --------------------------------------------------
     data:
@@ -99,22 +98,7 @@ def parse_args() -> argparse.Namespace:
 
     return parser.parse_args()
 
-def get_device() -> torch.device:
-    """
-    Returns the best available device (CUDA, MPS, or CPU).
 
-    Returns:
-        torch.device: The selected device for model training.
-    """
-    if torch.cuda.is_available():
-        device = torch.device("cuda")
-    elif torch.backends.mps.is_available():
-        device = torch.device("mps")
-    else:
-        device = torch.device("cpu")
-
-    logger.info(f"Using device: {device}")
-    return device
 
 def run_training(args: argparse.Namespace) -> None:
     """Main function to run training pipeline."""
@@ -166,9 +150,6 @@ def run_training(args: argparse.Namespace) -> None:
     )
     logger.info("Training arguments prepared.")
 
-    def compute_metrics_wrapper(eval_pred):
-        return e.compute_metrics(eval_pred, tokenizer)
-
     trainer = Seq2SeqTrainer(
         model,
         args,
@@ -176,7 +157,7 @@ def run_training(args: argparse.Namespace) -> None:
         eval_dataset=tokenized_datasets["test"],
         data_collator=DataCollatorForSeq2Seq(tokenizer, model=model),
         tokenizer=tokenizer,
-        compute_metrics=compute_metrics_wrapper,
+        compute_metrics=lambda eval_pred: compute_metrics(eval_pred, tokenizer),
         callbacks=[PrinterCallback(save_dir=save_path)],
     )
 

@@ -1,7 +1,26 @@
 import csv
+import torch
+from loguru import logger
 from datetime import datetime
 from transformers import TrainerCallback
 from pathlib import Path
+
+def get_device() -> torch.device:
+    """
+    Returns the best available device (CUDA, MPS, or CPU).
+
+    Returns:
+        torch.device: The selected device for model training.
+    """
+    if torch.cuda.is_available():
+        device = torch.device("cuda")
+    elif torch.backends.mps.is_available():
+        device = torch.device("mps")
+    else:
+        device = torch.device("cpu")
+
+    logger.info(f"Using device: {device}")
+    return device
 
 class PrinterCallback(TrainerCallback):
     """
