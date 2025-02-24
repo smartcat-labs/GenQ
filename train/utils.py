@@ -1,22 +1,42 @@
 import csv
-import glob
+import torch
+from loguru import logger
 from datetime import datetime
 from transformers import TrainerCallback
+from pathlib import Path
+
+def get_device() -> torch.device:
+    """
+    Returns the best available device (CUDA, MPS, or CPU).
+
+    Returns:
+        torch.device: The selected device for model training.
+    """
+    if torch.cuda.is_available():
+        device = torch.device("cuda")
+    elif torch.backends.mps.is_available():
+        device = torch.device("mps")
+    else:
+        device = torch.device("cpu")
+
+    logger.info(f"Using device: {device}")
+    return device
 
 class PrinterCallback(TrainerCallback):
     """
     A custom TrainerCallback that logs training and evaluation metrics to CSV files.
     """
-    def __init__(self):
-        self.metrics_file = "evaluation_metrics.csv"
-        self.final_metrics_file = "final_metrics.csv"
+    def __init__(self, save_dir: Path):
+        self.save_dir = Path(save_dir)
+        self.metrics_file = self.save_dir/"evaluation_metrics.csv"
+        self.final_metrics_file = self.save_dir/"final_metrics.csv"
 
         # Dictionary to store partial metrics keyed by (epoch, step)
         self.metrics_by_step = {}
 
         # Ensure the evaluation metrics CSV file exists and has headers
-        if not glob.glob(self.metrics_file):
-            with open(self.metrics_file, "w", newline="") as f:
+        if not self.metrics_file.exists():
+            with self.metrics_file.open("w", newline="") as f:
                 writer = csv.writer(f)
                 writer.writerow(
                     [
@@ -38,8 +58,8 @@ class PrinterCallback(TrainerCallback):
                 )
 
         # Ensure the final metrics CSV file exists and has headers
-        if not glob.glob(self.final_metrics_file):
-            with open(self.final_metrics_file, "w", newline="") as f:
+        if not self.metrics_file.exists():
+            with self.metrics_file.open("w", newline="") as f:
                 writer = csv.writer(f)
                 writer.writerow(
                     [

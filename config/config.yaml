@@ -1,18 +1,19 @@
 data:
   dataset_path: smartcat/Amazon-2023-GenQ
-  dataset_subset: ''
+  dataset_subset: null
   input_text_column: [title, description]
   label_text_column: short_query
   max_input_length: 512
   max_target_length: 30
-  cache_dir: ./cache
-  dev: true
+  cache_dir: null
+  dev: false
+  seed: 0
 train:
   output_dir_name: finetuned-amazon-product2query
   model_checkpoint: BeIR/query-gen-msmarco-t5-base-v1
   metrics: rouge
-  batch_size: 16
-  num_train_epochs: 2
+  batch_size: 32
+  num_train_epochs: 8
   evaluation_strategy: epoch
   save_strategy: epoch
   learning_rate: 5.6e-05

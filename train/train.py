@@ -6,13 +6,14 @@ from transformers import (
     Seq2SeqTrainer,
     DataCollatorForSeq2Seq
 )
-import torch
+from pathlib import Path
 from loguru import logger
-import time
+from datetime import datetime
 from config import Configuration
 from datapreprocess import process_data
-from printer_callback import PrinterCallback
-import eval as e
+from eval import compute_metrics
+from utils import PrinterCallback, get_device
+from transformers import set_seed
 
 """
 Script for fine-tuning a base model for text-to-query generation.
@@ -29,9 +30,9 @@ Script for fine-tuning a base model for text-to-query generation.
     1. Prepare a configuration file (YAML format) specifying:
        - Model checkpoint, training arguments, data paths, and evaluation settings.
     2. Execute the script from the terminal:
-       python prod2query_finetune.py -c config.yaml -r 'finetuned-amazon-product2query' --log_level INFO 
+       python train/train.py -c config/config.yaml -o 'finetuned-amazon-product2query' --log_level INFO 
     (Optional) to run on a smaller percentage of the dataset execute the script from the terminal with:
-        python prod2query_finetune.py -c test_config.yaml -r 'finetuned-amazon-product2query' --log_level INFO
+        python train/train.py -c config/test_config.yaml -o 'finetuned-amazon-product2query' --log_level INFO
     Example configuration file (config.yaml):
     --------------------------------------------------
     data:
@@ -84,7 +85,7 @@ def parse_args() -> argparse.Namespace:
         "-c", "--config", type=str, required=True, help="Path to the config file"
     )
     parser.add_argument(
-        "-r", "--output_path", type=str, default="finetuned-amazon-product2query", help="Model output path"
+        "-o", "--output_path", type=str, default="finetuned-amazon-product2query", help="Model output path"
     )
     parser.add_argument(
         "--log_level",
@@ -97,29 +98,21 @@ def parse_args() -> argparse.Namespace:
 
     return parser.parse_args()
 
-def get_device() -> torch.device:
-    """
-    Returns the best available device (GPU or CPU).
 
-    Returns:
-        torch.device: The device (CUDA or CPU) for model training.
-    """
-    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    logger.info(f"Using device: {device}")
-    return device
 
 def run_training(args: argparse.Namespace) -> None:
     """Main function to run training pipeline."""
-    start_time = time.time()
+    start_time = datetime.now().astimezone()
     config = Configuration.from_yaml(args.config)
 
-    config.to_yaml("config.yaml")  # Save the configuration
+    config.to_yaml(f"{save_path}/config.yaml")  # Save the configuration
 
-    logger.add("finetuning.log", level=args.log_level)
+    logger.add(f"{save_path}/finetuning.log", level=args.log_level)
     logger.info("=======Starting=======")
-    logger.info("Configuration saved to 'config.yaml'")
+    logger.info(f"Configuration saved to '{save_path}/config.yaml'")
 
     data = config.data
+    set_seed(seed=data.seed)
     train = config.train
 
     model = AutoModelForSeq2SeqLM.from_pretrained(train.model_checkpoint)
@@ -137,7 +130,7 @@ def run_training(args: argparse.Namespace) -> None:
     logger.info(f"Logging every {logging_steps} steps")
 
     args = Seq2SeqTrainingArguments(
-        output_dir=f"{train.output_dir_name}",
+        output_dir=f"{save_path}/{train.output_dir_name}",
         eval_strategy=train.evaluation_strategy,
         learning_rate=train.learning_rate,
         per_device_train_batch_size=train.batch_size,
@@ -157,9 +150,6 @@ def run_training(args: argparse.Namespace) -> None:
     )
     logger.info("Training arguments prepared.")
 
-    def compute_metrics_wrapper(eval_pred):
-        return e.compute_metrics(eval_pred, tokenizer)
-
     trainer = Seq2SeqTrainer(
         model,
         args,
@@ -167,8 +157,8 @@ def run_training(args: argparse.Namespace) -> None:
         eval_dataset=tokenized_datasets["test"],
         data_collator=DataCollatorForSeq2Seq(tokenizer, model=model),
         tokenizer=tokenizer,
-        compute_metrics=compute_metrics_wrapper,
-        callbacks=[PrinterCallback()],
+        compute_metrics=lambda eval_pred: compute_metrics(eval_pred, tokenizer),
+        callbacks=[PrinterCallback(save_dir=save_path)],
     )
 
     logger.info("Trainer initialized. 🚀 Starting training now!(^o^)")
@@ -176,9 +166,17 @@ def run_training(args: argparse.Namespace) -> None:
     # Start training
     trainer.train()
 
-    elapsed_time = time.time() - start_time
-    logger.success(f"Training completed in {elapsed_time:.2f} seconds ✅ ^ω^")
+    final_output_dir = f"{save_path}/{train.output_dir_name}/final"
+    model.save_pretrained(final_output_dir)
+
+    elapsed_time = datetime.now().astimezone() - start_time
+    logger.success(f"Training completed in {str(elapsed_time).split('.')[0]} seconds ✅ ^ω^")
 
 if __name__ == "__main__":
+    dt = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+    save_path = Path(f"train/runs/{dt}")
+
+    save_path.mkdir(parents = True, exist_ok = True)
+
     args = parse_args()
     run_training(args)

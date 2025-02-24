@@ -8,11 +8,12 @@ from loguru import logger
 nltk.download("punkt")
 nltk.download("punkt_tab")
 
+
 def process_data(data: DataConfig, tokenizer: AutoTokenizer) -> DatasetDict:
     """
     Processes a dataset for sequence-to-sequence task.
 
-    This function loads a dataset from Hugging Face, preprocesses the input and target text 
+    This function loads a dataset from Hugging Face, preprocesses the input and target text
     using a tokenizer, tokenizes the dataset.
 
     Args:
@@ -23,7 +24,7 @@ def process_data(data: DataConfig, tokenizer: AutoTokenizer) -> DatasetDict:
             - data.label_text_column (str): Column name containing target text (labels).
             - data.max_input_length (int): Maximum token length for inputs.
             - data.max_target_length (int): Maximum token length for labels.
-            - data.cache_dir (Path): Path to the cache directory 
+            - data.cache_dir (Path): Path to the cache directory
             - data.dev (bool): Whether to run the training on a small percentage of the dataset
         tokenizer (transformers.AutoTokenizer): The tokenizer to preprocess text.
 
@@ -38,6 +39,7 @@ def process_data(data: DataConfig, tokenizer: AutoTokenizer) -> DatasetDict:
         4. Process tokenized dataset.
         5. Remove unused columns and finalize dataset for training.
     """
+
     def preprocess_function(examples):
         """
         Tokenizes input and target text while ensuring proper truncation.
@@ -48,43 +50,48 @@ def process_data(data: DataConfig, tokenizer: AutoTokenizer) -> DatasetDict:
         Returns:
             dict: Tokenized inputs and labels.
         """
+        input_texts = [
+            "\n\n".join(filter(None, (sample))).strip()
+            for sample in zip(*[examples[col] for col in data.input_text_column])
+        ]
+
         model_inputs = tokenizer(
-            examples[data.input_text_column],
-            max_length=data.max_input_length,
-            truncation=True,
+            input_texts, max_length=data.max_input_length, truncation=True
         )
         labels = tokenizer(
-            examples[data.label_text_column], max_length=data.max_target_length, truncation=True
+            examples[data.label_text_column],
+            max_length=data.max_target_length,
+            truncation=True,
         )
         model_inputs["labels"] = labels["input_ids"]
         return model_inputs
-    
-    
-    logger.info(f"Loaded dataset: {data.dataset_path}, name={data.dataset_subset}")
+
+    logger.info(f"Loaded dataset: {data.dataset_path}")
 
     if data.dev:
         split_percentage = "[:1%]"
     else:
-        split_percentage = ""   
+        split_percentage = ""
 
-    train_subset = load_dataset(data.dataset_path, name=data.dataset_subset, cache_dir=data.cache_dir, split="train" + split_percentage)
-    test_subset = load_dataset(data.dataset_path, name=data.dataset_subset, cache_dir=data.cache_dir, split="test" + split_percentage) 
-          
-    dataset_hf = DatasetDict(
-        {
-            "train": train_subset,
-            "test": test_subset,
-        }
+    train_subset, test_subset = load_dataset(
+        data.dataset_path,
+        name=data.dataset_subset,
+        cache_dir=data.cache_dir,
+        split=["train" + split_percentage, "test" + split_percentage],
     )
-    logger.info(f'Selected {len(train_subset)} rows for "train" and {len(test_subset)} for "test"') 
 
-    tokenized_datasets = dataset_hf.map(preprocess_function, batched=True)
+    dataset_hf = DatasetDict({"train": train_subset, "test": test_subset})
+    logger.info(
+        f'Selected {len(train_subset)} rows for "train" and {len(test_subset)} for "test"'
+    )
+
+    tokenized_datasets = dataset_hf.map(
+        preprocess_function,
+        batched=True,
+        remove_columns=dataset_hf["train"].column_names,
+    )
     logger.info("Finished preprocessing tokenized dataset.")
 
-    tokenized_datasets = tokenized_datasets.remove_columns(
-        dataset_hf["train"].column_names
-    )
-    
     logger.info("Data ready for training.")
-    
+
     return tokenized_datasets
