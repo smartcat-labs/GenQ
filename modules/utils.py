@@ -25,7 +25,7 @@ def get_device() -> torch.device:
     logger.info(f"Using device: {device}")
     return device
 
-def load_eval_config(config_file: str) -> dict:
+def load_config(config_file: str, type: str) -> dict:
     """
     Load the configuration from a YAML file and set default values for missing keys.
 
@@ -44,19 +44,29 @@ def load_eval_config(config_file: str) -> dict:
     except yaml.YAMLError as e:
         logger.error(f"Error parsing config file: {e}")
         raise
-    
-    defaults = {
-        "input_text_columns": ["title", "description"],
-        "label_text_column": "short_query",
-        "dataset": "smartcat/Amazon-2023-GenQ",
-        "name": None,
-        "split": "test",
-        "batch_size": 16,
-        "model_paths": ["BeIR/query-gen-msmarco-t5-base-v1"],
-        "sample": None,
-        "seed": 42,
-        "log_level": "INFO"
-    }
+    if type == "eval":
+        defaults = {
+            "input_text_columns": ["title", "description"],
+            "label_text_column": "short_query",
+            "dataset": "smartcat/Amazon-2023-GenQ",
+            "name": None,
+            "split": "test",
+            "batch_size": 16,
+            "model_paths": ["BeIR/query-gen-msmarco-t5-base-v1"],
+            "sample": None,
+            "seed": 42,
+            "log_level": "INFO"
+        }
+    elif type == "analysis":
+        defaults = {
+            "results_path": "/home/petar/Documents/trainings/14-02/generated_results.csv",
+            "save_zeros": False,
+            "save_outperformed": False,
+            "save_best": False,
+            "save_worst": False,
+            "compute_similarity": False,
+            "compare_models": [0,1]
+        }
 
     for key, value in defaults.items():
         if key not in config:
@@ -65,6 +75,7 @@ def load_eval_config(config_file: str) -> dict:
 
     logger.info(f"Loaded config from {config_file}")
     return config
+
 
 class PrinterCallback(TrainerCallback):
     """

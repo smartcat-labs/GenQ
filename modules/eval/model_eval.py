@@ -9,7 +9,7 @@ from pathlib import Path
 from tqdm import tqdm
 from loguru import logger
 from datasets import load_dataset
-from modules.utils import get_device, load_eval_config, RougeScorer, Model
+from modules.utils import get_device, load_config, RougeScorer, Model
 from torch.utils.data import DataLoader
 from nltk.tokenize import sent_tokenize
 
@@ -209,7 +209,7 @@ def main():
     )
     args = parser.parse_args()
 
-    config = load_eval_config(args.config)
+    config = load_config(args.config, type="eval")
 
     run_evaluation(config)
 
