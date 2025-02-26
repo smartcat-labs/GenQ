@@ -171,4 +171,4 @@ cython_debug/
 .pypirc
 
 ## Additional
-*.DS_Store
+*.DS_Storepoetry.lock

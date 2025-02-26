@@ -2,7 +2,7 @@ import nltk
 from datasets import load_dataset, DatasetDict
 from transformers import AutoTokenizer
 
-from config import DataConfig
+from modules.train.config import DataConfig
 from loguru import logger
 
 nltk.download("punkt")
