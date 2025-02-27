@@ -160,7 +160,7 @@ def run_evaluation(config: dict) -> None:
         writer.writerow([
             *config["input_text_columns"],
             "input_text",
-            "target",
+            "target_query",
             "model",
             "generated_output",
             "rouge1",
