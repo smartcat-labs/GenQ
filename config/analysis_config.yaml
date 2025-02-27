@@ -1,0 +1,7 @@
+results_path: /home/petar/product2query/product2query/generated_results.csv
+save_zeros: False
+save_outperformed: False
+save_best: False
+save_worst: False
+compute_similarity : False
+compare_models: [0,2]
