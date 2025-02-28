@@ -9,10 +9,10 @@ from transformers import (
 from pathlib import Path
 from loguru import logger
 from datetime import datetime
-from config import Configuration
-from datapreprocess import process_data
-from eval import compute_metrics
-from utils import PrinterCallback, get_device
+from modules.train.config import Configuration
+from modules.train.datapreprocess import process_data
+from modules.train.eval import compute_metrics
+from modules.utils import PrinterCallback, get_device
 from transformers import set_seed
 
 """
@@ -30,9 +30,9 @@ Script for fine-tuning a base model for text-to-query generation.
     1. Prepare a configuration file (YAML format) specifying:
        - Model checkpoint, training arguments, data paths, and evaluation settings.
     2. Execute the script from the terminal:
-       python train/train.py -c config/config.yaml -o 'finetuned-amazon-product2query' --log_level INFO 
+        python -m modules.train.train -c config/config.yaml -o 'finetuned-amazon-product2query' --log_level INFO 
     (Optional) to run on a smaller percentage of the dataset execute the script from the terminal with:
-        python train/train.py -c config/test_config.yaml -o 'finetuned-amazon-product2query' --log_level INFO
+        python -m modules.train.train -c config/test_config.yaml -o 'finetuned-amazon-product2query' --log_level INFO
     Example configuration file (config.yaml):
     --------------------------------------------------
     data:
@@ -174,7 +174,7 @@ def run_training(args: argparse.Namespace) -> None:
 
 if __name__ == "__main__":
     dt = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-    save_path = Path(f"train/runs/{dt}")
+    save_path = Path(f"modules/train/runs/{dt}")
 
     save_path.mkdir(parents = True, exist_ok = True)
 

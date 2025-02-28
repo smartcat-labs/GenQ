@@ -1,9 +1,12 @@
 import csv
 import torch
+import yaml
 from loguru import logger
 from datetime import datetime
-from transformers import TrainerCallback
+from transformers import TrainerCallback, AutoModelForSeq2SeqLM, AutoTokenizer
 from pathlib import Path
+from evaluate import load
+from typing import List
 
 def get_device() -> torch.device:
     """
@@ -21,6 +24,58 @@ def get_device() -> torch.device:
 
     logger.info(f"Using device: {device}")
     return device
+
+def load_config(config_file: str, type: str) -> dict:
+    """
+    Load the configuration from a YAML file and set default values for missing keys.
+
+    Args:
+        config_file (str): Path to the YAML configuration file.
+
+    Returns:
+        dict: A dictionary containing the configuration parameters.
+    """
+    try:
+        with open(config_file, "r", encoding="utf-8") as f:
+            config = yaml.safe_load(f)
+    except FileNotFoundError:
+        logger.error(f"Config file '{config_file}' not found.")
+        raise
+    except yaml.YAMLError as e:
+        logger.error(f"Error parsing config file: {e}")
+        raise
+    if type == "eval":
+        defaults = {
+            "input_text_columns": ["title", "description"],
+            "label_text_column": "short_query",
+            "dataset": "smartcat/Amazon-2023-GenQ",
+            "name": None,
+            "split": "test",
+            "batch_size": 16,
+            "model_paths": ["BeIR/query-gen-msmarco-t5-base-v1"],
+            "sample": None,
+            "seed": 42,
+            "log_level": "INFO"
+        }
+    elif type == "analysis":
+        defaults = {
+            "results_path": "/home/petar/Documents/trainings/14-02/generated_results.csv",
+            "save_zeros": False,
+            "save_outperformed": False,
+            "save_best": False,
+            "save_worst": False,
+            "compute_similarity": False,
+            "compare_models": [0,1]
+        }
+
+    for key, value in defaults.items():
+        if key not in config:
+            config[key] = value
+            logger.warning(f"Key '{key}' not found in config. Using default: {value}")
+
+    logger.info(f"Loaded config from {config_file}")
+    return config
+
 
 class PrinterCallback(TrainerCallback):
     """
@@ -147,3 +202,63 @@ class PrinterCallback(TrainerCallback):
 
             # Remove this entry from memory since we've written it out
             del self.metrics_by_step[epoch_step_key]
+
+class RougeScorer:
+    """
+    Class for calculating ROUGE scores in batches.
+    """
+    def __init__(self):
+        self.scorer = load("rouge")
+        
+    def compute_batch(self, preds: List[str], refs: List[str]) -> List[dict]:
+        """
+        Compute ROUGE scores for a batch of predictions and references.
+
+        Args:
+            preds (List[str]): List of predicted texts.
+            refs (List[str]): List of reference texts.
+
+        Returns:
+            results List[dict]: List of dictionaries containing ROUGE-1, ROUGE-2, ROUGE-L, and ROUGE-Lsum scores for each prediction.
+        """
+        try:
+            scores = self.scorer.compute(predictions=preds, references=refs, use_aggregator=False)
+            return [{
+                'rouge1': round(scores['rouge1'][i] * 100, 2),
+                'rouge2': round(scores['rouge2'][i] * 100, 2),
+                'rougeL': round(scores['rougeL'][i] * 100, 2),
+                'rougeLsum': round(scores['rougeLsum'][i] * 100, 2)
+            } for i in range(len(preds))]
+        except (KeyError, IndexError, TypeError) as e:
+            print(f"Error in compute_batch: {e}")
+            return [{'rouge1': 0.0, 'rouge2': 0.0, 'rougeL': 0.0, 'rougeLsum': 0.0}] * len(preds)
+
+class Model:
+    """
+    Class for loading models and generating texts in batches.
+    """
+    def __init__(self, model_path: str, device: torch.device):
+        self.model = AutoModelForSeq2SeqLM.from_pretrained(model_path, torch_dtype=torch.float16 if device.type == 'cuda' else None).to(device)
+        self.tokenizer = AutoTokenizer.from_pretrained(model_path)
+        self.device = device
+        self.model.eval()
+        
+    def generate(self, input_texts: List[str]) -> List[str]:
+        """
+        Generate text from the input list of strings using the model.
+
+        Args:
+            input_texts (List[str]): List of input strings to generate text from.
+
+        Returns:
+            List[str]: List of generated texts.
+        """
+        with torch.no_grad():
+            inputs = self.tokenizer(input_texts, return_tensors="pt", padding=True, truncation=True, max_length=512).to(self.device)
+            generated_ids = self.model.generate(
+                inputs.input_ids,
+                max_length=30,
+                num_beams=4,
+                early_stopping=True
+            )
+            return self.tokenizer.batch_decode(generated_ids, skip_special_tokens=True)
