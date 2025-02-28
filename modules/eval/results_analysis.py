@@ -18,6 +18,9 @@ This script performs analysis on generated_results.csv,
 creates several plots comparing ROUGE scores, text length groups,
 and semantic similarity measures, and saves all plots into a folder
 named with the current date and time.
+
+Run the script with:
+    python -m modules.eval.results_analysis config/analysis_config.yaml
 """
 
 # Suppress warnings for cleaner output
@@ -355,6 +358,41 @@ def plot_semantic_similarity_distribution(filtered_df: pd.DataFrame) -> None:
     plt.savefig(f"{output_path}/semantic_similarity_distribution.png", dpi=300, bbox_inches="tight")
     plt.close()
 
+def plot_average_scores_by_model(data: pd.DataFrame, score_columns: List[str]) -> None:
+    """
+    Plots the average ROUGE scores for each model.
+
+    Parameters:
+        data (pd.DataFrame): The dataset containing ROUGE scores and model names.
+        score_columns (List[str]): List of column names for ROUGE scores.
+    """
+    avg_scores = data.groupby('model')[score_columns].mean().reset_index()
+    
+    plt.figure(figsize=(15, 12))
+    sns.set_theme(style="whitegrid")
+    
+    for i, score in enumerate(score_columns, 1):
+        plt.subplot(2, 2, i)
+        ax = sns.barplot(data=avg_scores, x='model', y=score, palette='tab10')
+        plt.title(f'{score.upper()}', fontsize=14, fontweight='bold')
+        plt.xlabel('Model', fontsize=12)
+        plt.ylabel(f'Average {score.upper()} (%)', fontsize=12)
+        
+        for p in ax.patches:
+            ax.annotate(f"{p.get_height():.2f}", 
+                        (p.get_x() + p.get_width() / 2., p.get_height()), 
+                        ha='center', va='center', 
+                        xytext=(0, 10), 
+                        textcoords='offset points',
+                        fontsize=10)
+    
+    plt.tight_layout()
+    plt.suptitle('Average ROUGE Scores by Model', fontsize=16, fontweight='bold', y=1.02)
+    
+    # Save and display the plot
+    plt.savefig(f"{output_path}/average_scores_by_model.png", dpi=300, bbox_inches="tight")
+    plt.close()
+
 
 def main():
     logger.info(f"Results will be saved in folder: {output_path}")
@@ -388,6 +426,7 @@ def main():
     # Create and save the comparison plots
     plot_detailed_comparison(results, score_columns, [first_model, second_model])
     plot_quick_comparison(results, score_columns, [first_model, second_model])
+    plot_average_scores_by_model(results, score_columns)
 
     # Retrieve and print various results
     get_outperformed_results(results, second_model, first_model, save=config["save_outperformed"])
