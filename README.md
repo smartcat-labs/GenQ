@@ -660,7 +660,7 @@ Some low-similarity outliers still achieve moderate ROUGE scores, suggesting sur
           <br><br>
           The bimodal nature of the distribution suggests that while a portion of generated queries are highly aligned with real user queries, some still exhibit lower similarity, likely due to domain-specific variations.  
           <br><br>
-          A significant number of generated queries achieve a similarity score of 0.6 or higher, confirming that the fine-tuned model effectively captures user intent** better than a generic, pre-trained model.
+          A significant number of generated queries achieve a similarity score of 0.6 or higher, confirming that the fine-tuned model effectively captures user intent better than a generic, pre-trained model.
         </td>
       </tr>
     </table>
