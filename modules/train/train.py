@@ -119,8 +119,12 @@ def run_training(args: argparse.Namespace) -> None:
 
     set_seed(seed=config.data.seed)
 
-    model = AutoModelForSeq2SeqLM.from_pretrained(config.train.model_checkpoint)
-    tokenizer = AutoTokenizer.from_pretrained(config.train.model_checkpoint)
+    model = AutoModelForSeq2SeqLM.from_pretrained(
+        config.train.model_checkpoint, cache_dir=config.data.cache_dir
+    )
+    tokenizer = AutoTokenizer.from_pretrained(
+        config.train.model_checkpoint, cache_dir=config.data.cache_dir
+    )
 
     device = get_device()
     model.to(device=device)
@@ -160,7 +164,7 @@ def run_training(args: argparse.Namespace) -> None:
         train_dataset=tokenized_datasets["train"],
         eval_dataset=tokenized_datasets["test"],
         data_collator=DataCollatorForSeq2Seq(tokenizer, model=model),
-        tokenizer=tokenizer,
+        processing_class=tokenizer,
         compute_metrics=lambda eval_pred: compute_metrics(eval_pred, tokenizer),
         callbacks=[PrinterCallback(save_dir=str(output_path))],
     )
