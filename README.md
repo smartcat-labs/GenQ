@@ -195,19 +195,13 @@ to install all necessary dependencies
 ### Run training
 For running the training, prepare the **config.yaml** file. If you don't want to modify it you can simply run the training with:
 ```bash
-python -m modules.train.train \  
-  -c config/config.yaml \  
-  -o 'finetuned-model' \  
-  --log_level INFO
+python -m modules.train.train -c config/config.yaml
 ```
 If you want to test out the training on a sample of the dataset, set the ```dev``` flag to ```True``` in the **config.yaml** or simply run the training with:
 ```bash
-python -m modules.train.train \  
-  -c config/test_config.yaml \  
-  -o 'finetuned-model' \  
-  --log_level INFO
+python -m modules.train.train -c config/test_config.yaml
 ```
-The best three models will be saved to train\runs\date_time\ by default.  
+The best three models will be saved to `models/date_time/` by default.  
 The checkpoint with the highest ROUGE-L score, which you can check in **evaluation_metrics.csv**, should be your best performing model.  
 To check out each checkpoint, you can run the evaluation.
 
