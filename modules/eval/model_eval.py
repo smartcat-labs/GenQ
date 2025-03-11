@@ -42,6 +42,7 @@ Example Configuration File (eval_config.yaml):
     dataset: smartcat/Amazon-2023-GenQ
     name: null
     split: test
+    cache_dir: null
     input_text_columns: ["title", "description"]
     label_text_column: short_query
     model_paths:

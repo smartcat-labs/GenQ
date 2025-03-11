@@ -11,16 +11,68 @@ from pathlib import Path
 from modules.utils import load_config
 
 """
-result_analysis.py
+Results Analysis Script for Text-to-Query Evaluation
 
-This script performs analysis on generated_results.csv,
-creates several plots comparing ROUGE scores, text length groups,
-and semantic similarity measures, and saves all plots into a folder
-named with the current date and time.
+This script analyzes evaluation results from `generated_results.csv`, 
+performs statistical analysis, visualizes model performance, and computes 
+semantic similarities between generated queries and reference queries.
 
-Run the script with:
+## Features:
+- **Model Comparison**: Generates plots comparing ROUGE scores across multiple models.
+- **Semantic Similarity Analysis**: Computes cosine similarity between generated and reference queries.
+- **Performance Insights**: Identifies cases where one model outperforms another.
+- **Data Distribution Analysis**: Analyzes query lengths and zero-score cases.
+- **Visualization**: Saves multiple plots for deeper insights into model performance.
+
+## Requirements:
+Install the required dependencies:
+    pandas matplotlib seaborn tqdm loguru sentence-transformers
+
+## How to Run:
+Prepare a YAML configuration file (`analysis_config.yaml`) specifying:
+- Path to the evaluation results CSV.
+- Models to compare.
+- Whether to compute semantic similarity.
+
+Execute the script from the terminal:
     python -m modules.eval.results_analysis config/analysis_config.yaml
+
+## Example Configuration File (analysis_config.yaml):
+results_path: results/eval_<dt>/generated_results.csv
+compare_models: [0, 1]
+save_best: True
+save_worst: True
+save_outperformed: True
+save_zeros: True
+compute_similarity: True
+
+## Outputs:
+1. **Plots**:
+   - `density_comparison.png`: Distribution of ROUGE scores for different models.
+   - `histogram_comparison.png`: Histograms comparing model ROUGE performance.
+   - `similarity_vs_rouge.png`: Scatter plots of semantic similarity vs. ROUGE scores.
+   - `group_sizes.png`: Analysis of generated query sizes.
+
+2. **CSV Files** (if enabled in config):
+   - `zeros.csv`: Queries where all ROUGE scores are zero.
+   - `better_model1.csv`: Cases where `model1` outperforms `model2`.
+   - `best.csv`: Top-performing queries based on ROUGE-L scores.
+   - `worst.csv`: Worst-performing queries.
+
+3. **Log File**:
+   - `result_analysis.log`: Captures detailed analysis steps and findings.
+
+## Script Workflow:
+1. **Load Results**: Reads the evaluation results from a CSV file.
+2. **Analyze Model Performance**:
+   - Compares models based on ROUGE scores.
+   - Identifies zero-score cases.
+   - Finds outperformed results.
+3. **Compute Semantic Similarities (Optional)**:
+   - Uses `SentenceTransformer` to compare generated queries to target queries.
+4. **Save Results and Plots**: Outputs analysis results in CSV and visual formats.
 """
+
 
 # Suppress warnings for cleaner output
 warnings.filterwarnings("ignore")
@@ -39,6 +91,7 @@ def plot_quick_comparison(
         data (pd.DataFrame): The dataset containing ROUGE scores.
         score_columns (List[str]): List of column names for ROUGE scores.
         model_names (List[str]): List of model names to compare.
+        output_path (Path): Path to save the output plot.
 
     Returns:
         None: Displays and saves the plots.
@@ -113,6 +166,7 @@ def plot_detailed_comparison(
         data (pd.DataFrame): The dataset containing ROUGE scores.
         score_columns (List[str]): List of column names for ROUGE scores.
         model_names (List[str]): List of model names to compare (must contain exactly two models).
+        output_path (Path): Path to save the output plot.
 
     Returns:
         None: Displays and saves the plots.
@@ -186,6 +240,7 @@ def get_results_for_zero_scores(
     Parameters:
         data (pd.DataFrame): DataFrame with ROUGE scores.
         model_name (str): Name of the model.
+        output_path (Path): Path to save the output plot.
         save (bool): Whether to save the results to a CSV file.
 
     Returns:
@@ -219,6 +274,7 @@ def get_outperformed_results(
         data (pd.DataFrame): DataFrame with ROUGE scores and outputs.
         first_model (str): Name of the first model.
         second_model (str): Name of the second model.
+        output_path (Path): Path to save the output plot.
         save (bool): Whether to save the results to a CSV file.
 
     Returns:
@@ -290,6 +346,7 @@ def get_best_results(
         data (pd.DataFrame): DataFrame with ROUGE scores.
         score (float): Threshold for ROUGE-L score.
         model_name (str): Name of the model.
+        output_path (Path): Path to save the output plot.
         save (bool): Whether to save the results to a CSV file.
 
     Returns:
@@ -317,6 +374,7 @@ def get_worst_results(
         data (pd.DataFrame): DataFrame with ROUGE scores.
         model_name (str): Name of the model.
         score (float): Threshold for ROUGE-L score.
+        output_path (Path): Path to save the output plot.
         save (bool): Whether to save the results to a CSV file.
 
     Returns:
@@ -361,6 +419,7 @@ def plot_by_group_sizes(df: pd.DataFrame, output_path: Path) -> None:
 
     Parameters:
         df (pd.DataFrame): DataFrame with average ROUGE scores by group size.
+        output_path (Path): Path to save the output plot.
     """
     score_columns = ["rouge1_avg", "rouge2_avg", "rougeL_avg", "rougeLsum_avg"]
     fig, axes = plt.subplots(nrows=2, ncols=2, figsize=(10, 8))
@@ -437,6 +496,7 @@ def plot_similarity_vs_rouge(filtered_df: pd.DataFrame, output_path: Path) -> No
 
     Parameters:
         filtered_df (pd.DataFrame): DataFrame containing 'semantic_similarity' and ROUGE score columns.
+        output_path (Path): Path to save the output plot.
     """
     metrics = ["rouge1", "rouge2", "rougeL", "rougeLsum"]
     colors = ["blue", "red", "green", "purple"]
@@ -470,6 +530,7 @@ def plot_semantic_similarity_distribution(
 
     Parameters:
         filtered_df (pd.DataFrame): DataFrame containing the 'semantic_similarity' column.
+        output_path (Path): Path to save the output plot.
     """
     plt.figure(figsize=(8, 5))
     sns.histplot(filtered_df["semantic_similarity"], bins=25, kde=True, color="blue")
@@ -494,6 +555,7 @@ def plot_average_scores_by_model(
     Parameters:
         data (pd.DataFrame): The dataset containing ROUGE scores and model names.
         score_columns (List[str]): List of column names for ROUGE scores.
+        output_path (Path): Path to save the output plot.
     """
     avg_scores = data.groupby("model")[score_columns].mean().reset_index()
 

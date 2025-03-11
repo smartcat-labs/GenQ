@@ -44,9 +44,10 @@ Script for fine-tuning a base model for text-to-query generation.
         max_target_length: 30
         cache_dir: ./cache
         dev: false
+        seed: 0
     train:
         model_checkpoint: example-t5-base
-        output_dir_name: finetuned-model-output
+        metrics: rouge
         evaluation_strategy: epoch
         learning_rate: 5e-5
         batch_size: 16
@@ -104,7 +105,21 @@ def parse_args() -> argparse.Namespace:
 
 
 def run_training(args: argparse.Namespace) -> None:
-    """Main function to run training pipeline."""
+    """Main function to run training pipeline.
+    
+    Steps:
+        1. Initializes logging and sets up output directories.
+        2. Loads configuration from YAML and saves a copy.
+        3. Loads pre-trained model and tokenizer.
+        4. Processes the dataset (tokenization and formatting).
+        5. Configures training arguments (`Seq2SeqTrainingArguments`).
+        6. Initializes `Seq2SeqTrainer` and begins training.
+        7. Saves the final trained model.
+
+    Args:
+        args (argparse.Namespace): Parsed command-line arguments.
+
+    """
     dt = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
     output_path = Path(args.output_path) / f"train_{dt}" / "models"
     output_path.mkdir(parents=True, exist_ok=True)

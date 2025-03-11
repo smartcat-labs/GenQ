@@ -1,7 +1,7 @@
 import nltk
 from datasets import load_dataset, DatasetDict
 from transformers import AutoTokenizer
-
+from typing import Dict, Any
 from modules.train.config import DataConfig
 from loguru import logger
 
@@ -40,15 +40,15 @@ def process_data(data: DataConfig, tokenizer: AutoTokenizer) -> DatasetDict:
         5. Remove unused columns and finalize dataset for training.
     """
 
-    def preprocess_function(examples):
+    def preprocess_function(examples: Dict[str, Any]) -> Dict[str, Any]:
         """
         Tokenizes input and target text while ensuring proper truncation.
 
         Args:
-            examples (dict): A batch of dataset samples.
+            examples (Dict[str, Any]): A batch of dataset samples.
 
         Returns:
-            dict: Tokenized inputs and labels.
+            Dict[str, Any]: Tokenized inputs and labels.
         """
         input_texts = [
             "\n\n".join(filter(None, (sample))).strip()
