@@ -1,11 +1,12 @@
 input_text_columns: [title]
 label_text_column: short_query
 dataset: smartcat/Amazon-2023-GenQ
+cache_dir: null
 name: null
 split: test
 batch_size: 64
 model_paths: 
-- smartcat/T5-product2query-finetune-v1
+- smartcat/T5-GenQ-TDC-v1
 - BeIR/query-gen-msmarco-t5-base-v1
 sample: 500
 seed: 42

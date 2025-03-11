@@ -1,4 +1,4 @@
-results_path: /home/petar/product2query/product2query/generated_results.csv
+results_path: results/eval_<dt>/generated_results.csv
 save_zeros: False
 save_outperformed: False
 save_best: False

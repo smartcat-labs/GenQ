@@ -201,7 +201,7 @@ If you want to test out the training on a sample of the dataset, set the ```dev`
 ```bash
 python -m modules.train.train -c config/test_config.yaml
 ```
-The best three models will be saved to `models/date_time/` by default.  
+The best three models will be saved to `results/train_date_time/models` by default.  
 The checkpoint with the highest ROUGE-L score, which you can check in **evaluation_metrics.csv**, should be your best performing model.  
 To check out each checkpoint, you can run the evaluation.
 
@@ -214,7 +214,7 @@ python -m modules.eval.model_eval -c config/eval_config.yaml
 ```
 This will run the evaluation with our fine-tuned model by default.   
 
-After it's finished, you can look at the results in the **generated_results.csv** saved to `eval/date_time/` by default.  
+After it's finished, you can look at the results in the **generated_results.csv** saved to `results/eval_date_time` by default.  
 
 For further analysis use the `results_analysis.py` script with your `generated_results.csv` to create plots and see specific cases where your model had better or worse results.
 To run the script, specify in the `analysis_config.yaml` file the path to your generated results, set the parameters to your liking and run the script with:
@@ -287,11 +287,11 @@ generated_text = tokenizer.decode(generated_ids[0], skip_special_tokens=True)
     <td style="width:65%"><img src="images/t5-genq-tdc-v1/average_scores_by_model.png" alt="image"></td>
     <td>
 
-```checkpoint-41448``` (T5-GenQ-TDC-v1) outperforms ```query-gen-msmarco-t5-base-v1``` across all ROUGE metrics.  
+`checkpoint-41448` (T5-GenQ-TDC-v1) outperforms `query-gen-msmarco-t5-base-v1` across all ROUGE metrics.  
 
-The largest performance difference is in ROUGE2, where ```checkpoint-41448``` achieves 56.11, while ```query-gen-msmarco-t5-base-v1``` only reaches 15.29.  
+The largest performance difference is in ROUGE2, where `checkpoint-41448` achieves 56.11, while `query-gen-msmarco-t5-base-v1` only reaches 15.29.  
 
-ROUGE1, ROUGEL, and ROUGELSUM scores are similar in trend, with ```checkpoint-41448``` scoring above 75, while ```query-gen-msmarco-t5-base-v1``` remains below 35.</td></tr>
+ROUGE1, ROUGEL, and ROUGELSUM scores are similar in trend, with `checkpoint-41448` scoring above 75, while `query-gen-msmarco-t5-base-v1` remains below 35.</td></tr>
     </table>
   </details>
 
@@ -300,14 +300,14 @@ ROUGE1, ROUGEL, and ROUGELSUM scores are similar in trend, with ```checkpoint-41
     <td style="width:65%"><img src="images/t5-genq-tdc-v1/density_comparison.png" alt="image"></td>
     <td>
 
-```checkpoint-41448``` (T5-GenQ-TDC-v1) consistently has a higher density peak at 100%. This suggests that a significant portion of its generated queries closely match the reference queries.   
+`checkpoint-41448` (T5-GenQ-TDC-v1) consistently has a higher density peak at 100%. This suggests that a significant portion of its generated queries closely match the reference queries.   
 
-For ROUGE1, ROUGEL, and ROUGELSUM, the ```query-gen-msmarco-t5-base-v1``` model has multiple peaks below 50%, indicating poorer alignment with reference queries.
+For ROUGE1, ROUGEL, and ROUGELSUM, the `query-gen-msmarco-t5-base-v1` model has multiple peaks below 50%, indicating poorer alignment with reference queries.
 In ROUGE2, a large portion of scores are near zero, meaning this model struggles with capturing bi-gram level similarity.   
 
-While ```checkpoint-41448``` has a dominant peak around 100%, it also has scores across the spectrum, indicating a more varied performance across queries.   
+While `checkpoint-41448` has a dominant peak around 100%, it also has scores across the spectrum, indicating a more varied performance across queries.   
 
-```query-gen-msmarco-t5-base-v1``` struggles with higher ROUGE scores. The distribution remains largely below 50% across all metrics, with notable peaks close to 0%.
+`query-gen-msmarco-t5-base-v1` struggles with higher ROUGE scores. The distribution remains largely below 50% across all metrics, with notable peaks close to 0%.
     </td></tr>
     </table>
   </details>
@@ -317,11 +317,11 @@ While ```checkpoint-41448``` has a dominant peak around 100%, it also has scores
     <td style="width:65%"><img src="images/t5-genq-tdc-v1/histogram_comparison.png" alt="image"></td>
     <td>
     
-```checkpoint-41448``` (T5-GenQ-TDC-v1, blue) trends toward higher ROUGE scores, peaking near 100%.  
+`checkpoint-41448` (T5-GenQ-TDC-v1, blue) trends toward higher ROUGE scores, peaking near 100%.  
 
-```query-gen-msmarco-t5-base-v1``` (orange) has more low-score peaks, especially in ROUGE-2, reinforcing its lower precision.  
+`query-gen-msmarco-t5-base-v1` (orange) has more low-score peaks, especially in ROUGE-2, reinforcing its lower precision.  
 
-These histograms confirm ```checkpoint-41448``` consistently generates more accurate text.</td></tr>
+These histograms confirm `checkpoint-41448` consistently generates more accurate text.</td></tr>
     </table>
   </details>
 
@@ -391,13 +391,13 @@ ROUGE1, ROUGEL, and ROUGELSUM scores are very similar in both trends, with check
     <td style="width:65%"><img src="images/t5-genq-t-v1/density_comparison.png" alt="image"></td>
     <td>
 
-```T5-GenQ-T-v1``` - Higher concentration of high ROUGE scores, especially near 100%, indicating strong text overlap with references.  
+`T5-GenQ-T-v1` - Higher concentration of high ROUGE scores, especially near 100%, indicating strong text overlap with references.  
       
-```query-gen-msmarco-t5-base-v1``` – more spread-out distribution, with multiple peaks at 10-40%, suggesting greater variability but lower precision.  
+`query-gen-msmarco-t5-base-v1` – more spread-out distribution, with multiple peaks at 10-40%, suggesting greater variability but lower precision.  
 
-ROUGE-1 & ROUGE-L: ```T5-GenQ-T-v1``` peaks at 100%, while ```query-gen-msmarco-t5-base-v1``` has lower, broader peaks.  
+ROUGE-1 & ROUGE-L: `T5-GenQ-T-v1` peaks at 100%, while `query-gen-msmarco-t5-base-v1` has lower, broader peaks.  
 
-ROUGE-2: ```query-gen-msmarco-t5-base-v1``` has a high density at 0%, indicating many low-overlap outputs.
+ROUGE-2: `query-gen-msmarco-t5-base-v1` has a high density at 0%, indicating many low-overlap outputs.
 </td></tr>
     </table>
   </details>
@@ -407,13 +407,13 @@ ROUGE-2: ```query-gen-msmarco-t5-base-v1``` has a high density at 0%, indicating
     <td style="width:65%"><img src="images/t5-genq-t-v1/histogram_comparison.png" alt="image"></td>
     <td>
 
-```T5-GenQ-T-v1``` – higher concentration of high ROUGE scores, especially near 100%, indicating strong text overlap with references.  
+`T5-GenQ-T-v1` – higher concentration of high ROUGE scores, especially near 100%, indicating strong text overlap with references.  
 
-```query-gen-msmarco-t5-base-v1``` – more spread-out distribution, with peaks in the 10-40% range, suggesting greater variability but lower precision.  
+`query-gen-msmarco-t5-base-v1` – more spread-out distribution, with peaks in the 10-40% range, suggesting greater variability but lower precision.  
 
-ROUGE-1 & ROUGE-L: ```T5-GenQ-T-v1``` shows a rising trend towards higher scores, while ```query-gen-msmarco-t5-base-v1``` has multiple peaks at lower scores.  
+ROUGE-1 & ROUGE-L: `T5-GenQ-T-v1` shows a rising trend towards higher scores, while `query-gen-msmarco-t5-base-v1` has multiple peaks at lower scores.  
 
-ROUGE-2: ```query-gen-msmarco-t5-base-v1``` has a high concentration of low-score outputs, whereas ```T5-GenQ-T-v1``` achieves more high-scoring outputs.</td></tr>
+ROUGE-2: `query-gen-msmarco-t5-base-v1` has a high concentration of low-score outputs, whereas `T5-GenQ-T-v1` achieves more high-scoring outputs.</td></tr>
     </table>
   </details>
 
@@ -464,11 +464,11 @@ Higher similarity → Higher ROUGE scores, indicating strong n-gram overlap in s
     <td style="width:65%"><img src="images/t5-genq-td-v1/average_scores_by_model.png" alt="image"></td>
     <td>
 
-```checkpoint-34280``` (T5-GenQ-TD-v1) significantly outperforms ```query-gen-msmarco-t5-base-v1``` across all ROUGE metrics.  
+`checkpoint-34280` (T5-GenQ-TD-v1) significantly outperforms `query-gen-msmarco-t5-base-v1` across all ROUGE metrics.  
 
-The difference is most notable in ROUGE-2, where ```checkpoint-34280``` achieves 56.24% vs. 15.29% for the baseline model.  
+The difference is most notable in ROUGE-2, where `checkpoint-34280` achieves 56.24% vs. 15.29% for the baseline model.  
 
-These results suggest ```checkpoint-34280``` produces more precise and high-overlap text generations.</td></tr>
+These results suggest `checkpoint-34280` produces more precise and high-overlap text generations.</td></tr>
     </table>
   </details>
 
@@ -477,9 +477,9 @@ These results suggest ```checkpoint-34280``` produces more precise and high-over
     <td style="width:65%"><img src="images/t5-genq-td-v1/density_comparison.png" alt="image"></td>
     <td>
     
-```checkpoint-34280``` (T5-GenQ-TD-v1) has strong peaks near 100%, indicating high overlap with reference texts.  
+`checkpoint-34280` (T5-GenQ-TD-v1) has strong peaks near 100%, indicating high overlap with reference texts.  
 
-```query-gen-msmarco-t5-base-v1``` shows a broader distribution, with peaks at low to mid-range scores (10-40%), suggesting greater variability but lower precision.  
+`query-gen-msmarco-t5-base-v1` shows a broader distribution, with peaks at low to mid-range scores (10-40%), suggesting greater variability but lower precision.  
 
 ROUGE-2 has a high density at 0% for the baseline model, implying many instances with no bigram overlap.</td></tr>
     </table>
@@ -490,11 +490,11 @@ ROUGE-2 has a high density at 0% for the baseline model, implying many instances
     <td style="width:65%"><img src="images/t5-genq-td-v1/histogram_comparison.png" alt="image"></td>
     <td>
     
-```checkpoint-34280``` (T5-GenQ-TD-v1, blue) shows a steady increase toward high ROUGE scores, peaking at 100%.  
+`checkpoint-34280` (T5-GenQ-TD-v1, blue) shows a steady increase toward high ROUGE scores, peaking at 100%.  
 
-```query-gen-msmarco-t5-base-v1``` (orange) has multiple low-score peaks, particularly in ROUGE-2, reinforcing its lower text overlap performance.  
+`query-gen-msmarco-t5-base-v1` (orange) has multiple low-score peaks, particularly in ROUGE-2, reinforcing its lower text overlap performance.  
 
-These histograms confirm that ```checkpoint-34280``` consistently generates more accurate outputs.</td></tr>
+These histograms confirm that `checkpoint-34280` consistently generates more accurate outputs.</td></tr>
     </table>
   </details>
 
@@ -556,9 +556,9 @@ This analysis helps understand how semantic similarity aligns with n-gram overla
     <td style="width:65%"><img src="images/t5-genq-tde-v1/average_scores_by_model.png" alt="image"></td>
     <td>
     
-```checkpoint-68552``` (T5-GenQ-TDE-v1) outperforms ```query-gen-msmarco-t5-base-v1``` across all ROUGE metrics.  
+`checkpoint-68552` (T5-GenQ-TDE-v1) outperforms `query-gen-msmarco-t5-base-v1` across all ROUGE metrics.  
 
-The most significant difference is in ROUGE-2, where ```checkpoint-68552``` scores 54.32% vs. 17.40% for the baseline model.</td></tr>
+The most significant difference is in ROUGE-2, where `checkpoint-68552` scores 54.32% vs. 17.40% for the baseline model.</td></tr>
     </table>
   </details>
 
@@ -567,9 +567,9 @@ The most significant difference is in ROUGE-2, where ```checkpoint-68552``` scor
     <td style="width:65%"><img src="images/t5-genq-tde-v1/density_comparison.png" alt="image"></td>
     <td>
 
-```checkpoint-68552``` (T5-GenQ-TDE-v1) peaks near 100%, showing strong text overlap.  
+`checkpoint-68552` (T5-GenQ-TDE-v1) peaks near 100%, showing strong text overlap.  
 
-```query-gen-msmarco-t5-base-v1``` has a wider distribution, with peaks in the low to mid-score range (10-40%), indicating greater variability but lower precision.  
+`query-gen-msmarco-t5-base-v1` has a wider distribution, with peaks in the low to mid-score range (10-40%), indicating greater variability but lower precision.  
 
 ROUGE-2 has a high density at 0% for the baseline model, meaning many outputs lack bigram overlap.</td></tr>
     </table>
@@ -580,11 +580,11 @@ ROUGE-2 has a high density at 0% for the baseline model, meaning many outputs la
     <td style="width:65%"><img src="images/t5-genq-tde-v1/histogram_comparison.png" alt="image"></td>
     <td>
     
-```checkpoint-68552``` (T5-GenQ-TDE-v1, blue) trends toward higher ROUGE scores, with a peak at 100%.  
+`checkpoint-68552` (T5-GenQ-TDE-v1, blue) trends toward higher ROUGE scores, with a peak at 100%.  
 
-```query-gen-msmarco-t5-base-v1``` (orange) has more low-score peaks, especially in ROUGE-2, reinforcing its lower precision.   
+`query-gen-msmarco-t5-base-v1` (orange) has more low-score peaks, especially in ROUGE-2, reinforcing its lower precision.   
 
-These histograms confirm ```checkpoint-68552``` consistently generates more accurate text.</td></tr>
+These histograms confirm `checkpoint-68552` consistently generates more accurate text.</td></tr>
     </table>
   </details>
 

@@ -10,7 +10,9 @@ class DataConfig:
 
     dataset_path: str = "smartcat/Amazon-2023-GenQ"
     dataset_subset: str = None
-    input_text_column: List[str] = field(default_factory=lambda: ["title", "description"]) 
+    input_text_column: List[str] = field(
+        default_factory=lambda: ["title", "description"]
+    )
     label_text_column: str = "short_query"
     max_input_length: int = 512
     max_target_length: int = 30
@@ -18,46 +20,38 @@ class DataConfig:
     dev: bool = False
     seed: int = 0
 
-def __post_init__(self):
-    assert (
-        isinstance(self.dataset_path, str) and self.dataset_path
-    ), "dataset_path must be a non-empty string"
-    assert self.dataset_subset is None or (
-        isinstance(self.dataset_subset, str)
-    ), "dataset_subset must be a string or None"
-    assert (
-        isinstance(self.input_text_column, List[str]) and self.input_text_column
-    ), "input_text_column must be a non-empty list"
-    assert (
-        isinstance(self.label_text_column, str) and self.label_text_column
-    ), "label_text_column must be a non-empty string"
-    assert (
-        isinstance(self.max_input_length, int) and self.max_input_length > 0
-    ), "max_input_length must be a positive integer"
-    assert (
-        isinstance(self.max_target_length, int) and self.max_target_length > 0
-    ), "max_target_length must be a positive integer"
+    def __post_init__(self):
+        assert (
+            isinstance(self.dataset_path, str) and self.dataset_path
+        ), "dataset_path must be a non-empty string"
+        assert self.dataset_subset is None or (
+            isinstance(self.dataset_subset, str)
+        ), "dataset_subset must be a string or None"
+        assert (
+            isinstance(self.input_text_column, list) and len(self.input_text_column) > 0
+        ), "input_text_column must be a non-empty list"
+        assert (
+            isinstance(self.label_text_column, str) and self.label_text_column
+        ), "label_text_column must be a non-empty string"
+        assert (
+            isinstance(self.max_input_length, int) and self.max_input_length > 0
+        ), "max_input_length must be a positive integer"
+        assert (
+            isinstance(self.max_target_length, int) and self.max_target_length > 0
+        ), "max_target_length must be a positive integer"
 
-    if isinstance(self.output_dir_name, str):
-            self.output_dir_name = Path(self.cache_dir)
+        assert (
+            self.cache_dir is None or self.cache_dir
+        ), "cache_dir must be a string or None"
 
-    assert self.cache_dir is None or self.cache_dir, "cache_dir must be a string or None"
-    
-    assert (
-        isinstance(self.dev, bool) and self.dev
-    ), "dev must be a boolean"
-    assert (
-        isinstance(self.seed, int) and self.seed
-    ), "seed must be a integer"
-
-
+        assert isinstance(self.dev, bool), "dev must be a boolean"
+        assert isinstance(self.seed, int), "seed must be a integer"
 
 
 @dataclass
 class TrainConfig:
     """Configuration for training arguments"""
 
-    output_dir_name: Path
     model_checkpoint: str = "BeIR/query-gen-msmarco-t5-base-v1"
     metrics: str = "rouge"
     batch_size: int = 8
@@ -76,12 +70,6 @@ class TrainConfig:
     report_to: str = "none"
 
     def __post_init__(self):
-        if isinstance(self.output_dir_name, str):
-            self.output_dir_name = Path(self.output_dir_name)
-
-        assert (
-            self.output_dir_name
-        ), "output_dir_name must be a non-empty Path or string"
         assert self.model_checkpoint, "model_checkpoint must be a non-empty string"
         assert self.metrics, "metrics must be a non-empty string"
         assert (
