@@ -40,7 +40,7 @@
 🤖 ✨ 🔍 Generate precise, realistic user-focused search queries from text 🛒 🚀 📊
 
 ## Introduction
-This project contains the scripts used to creaate the fine-tuned model GenQ. 
+This project contains the scripts used to create the fine-tuned model GenQ. 
 This model has been specifically designed to generate high-quality queries for e-commerce products and also articles, achieving improved performance compared to the base model.
 
 This repository serves as a comprehensive resource for:
@@ -218,7 +218,7 @@ This will run the evaluation with our fine-tuned model by default.
 After it's finished, you can look at the results in the **generated_results.csv** saved to eval\runs\date_time\ by default.  
 
 For further analysis use the **results_analysis.py** script with your **generated_results.csv** to create plots and see specific cases where your model had better/worse results.
-To run the script, specify in the **analysis_config.yaml** file the path to your generated results, set the parameters to ypur liking and run the script with:
+To run the script, specify in the **analysis_config.yaml** file the path to your generated results, set the parameters to your liking and run the script with:
 ```bash
 python -m modules.eval.results_analysis config/analysis_config.yaml
 ```
@@ -628,6 +628,8 @@ Some low-similarity outliers still achieve moderate ROUGE scores, suggesting sur
 ### Performance on Another Dataset
 
   <p>To assess the performance of our fine-tuned query generation model, we conducted evaluations on a dataset containing real user queries, which was not part of the fine-tuning data. The goal was to verify the model's generalizability and effectiveness in generating high-quality queries for e-commerce products.</p>
+
+  For this experiment, we utilized [Studeni/amazon-esci-data](https://huggingface.co/datasets/Studeni/amazon-esci-data). From this dataset, we specifically selected queries that were in English and closely aligned with the corresponding product descriptions.
   
   <details><summary><b>Average scores by model</b></summary>  
     <table style="width:100%">
