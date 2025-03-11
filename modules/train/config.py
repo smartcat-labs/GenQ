@@ -28,7 +28,7 @@ class DataConfig:
             isinstance(self.dataset_subset, str)
         ), "dataset_subset must be a string or None"
         assert (
-            isinstance(self.input_text_column, List[str]) and self.input_text_column
+            isinstance(self.input_text_column, list) and len(self.input_text_column) > 0
         ), "input_text_column must be a non-empty list"
         assert (
             isinstance(self.label_text_column, str) and self.label_text_column
@@ -44,8 +44,8 @@ class DataConfig:
             self.cache_dir is None or self.cache_dir
         ), "cache_dir must be a string or None"
 
-        assert isinstance(self.dev, bool) and self.dev, "dev must be a boolean"
-        assert isinstance(self.seed, int) and self.seed, "seed must be a integer"
+        assert isinstance(self.dev, bool), "dev must be a boolean"
+        assert isinstance(self.seed, int), "seed must be a integer"
 
 
 @dataclass
