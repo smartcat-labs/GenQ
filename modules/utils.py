@@ -8,6 +8,7 @@ from pathlib import Path
 from evaluate import load
 from typing import List
 
+
 def get_device() -> torch.device:
     """
     Returns the best available device (CUDA, MPS, or CPU).
@@ -24,6 +25,7 @@ def get_device() -> torch.device:
 
     logger.info(f"Using device: {device}")
     return device
+
 
 def load_config(config_file: str, type: str) -> dict:
     """
@@ -55,7 +57,7 @@ def load_config(config_file: str, type: str) -> dict:
             "model_paths": ["BeIR/query-gen-msmarco-t5-base-v1"],
             "sample": None,
             "seed": 42,
-            "log_level": "INFO"
+            "log_level": "INFO",
         }
     elif type == "analysis":
         defaults = {
@@ -65,7 +67,7 @@ def load_config(config_file: str, type: str) -> dict:
             "save_best": False,
             "save_worst": False,
             "compute_similarity": False,
-            "compare_models": [0,1]
+            "compare_models": [0, 1],
         }
 
     for key, value in defaults.items():
@@ -81,10 +83,11 @@ class PrinterCallback(TrainerCallback):
     """
     A custom TrainerCallback that logs training and evaluation metrics to CSV files.
     """
+
     def __init__(self, save_dir: Path):
         self.save_dir = Path(save_dir)
-        self.metrics_file = self.save_dir/"evaluation_metrics.csv"
-        self.final_metrics_file = self.save_dir/"final_metrics.csv"
+        self.metrics_file = self.save_dir / "evaluation_metrics.csv"
+        self.final_metrics_file = self.save_dir / "final_metrics.csv"
 
         # Dictionary to store partial metrics keyed by (epoch, step)
         self.metrics_by_step = {}
@@ -174,9 +177,7 @@ class PrinterCallback(TrainerCallback):
             or "grad_norm" in combined_logs
             or "learning_rate" in combined_logs
         )
-        have_evaluation = (
-            "eval_loss" in combined_logs or "eval_rouge1" in combined_logs
-        )
+        have_evaluation = "eval_loss" in combined_logs or "eval_rouge1" in combined_logs
 
         # If we have both sets of metrics, write them to the CSV
         if have_training and have_evaluation:
@@ -203,13 +204,15 @@ class PrinterCallback(TrainerCallback):
             # Remove this entry from memory since we've written it out
             del self.metrics_by_step[epoch_step_key]
 
+
 class RougeScorer:
     """
     Class for calculating ROUGE scores in batches.
     """
+
     def __init__(self):
         self.scorer = load("rouge")
-        
+
     def compute_batch(self, preds: List[str], refs: List[str]) -> List[dict]:
         """
         Compute ROUGE scores for a batch of predictions and references.
@@ -222,27 +225,40 @@ class RougeScorer:
             results List[dict]: List of dictionaries containing ROUGE-1, ROUGE-2, ROUGE-L, and ROUGE-Lsum scores for each prediction.
         """
         try:
-            scores = self.scorer.compute(predictions=preds, references=refs, use_aggregator=False)
-            return [{
-                'rouge1': round(scores['rouge1'][i] * 100, 2),
-                'rouge2': round(scores['rouge2'][i] * 100, 2),
-                'rougeL': round(scores['rougeL'][i] * 100, 2),
-                'rougeLsum': round(scores['rougeLsum'][i] * 100, 2)
-            } for i in range(len(preds))]
+            scores = self.scorer.compute(
+                predictions=preds, references=refs, use_aggregator=False
+            )
+            return [
+                {
+                    "rouge1": round(scores["rouge1"][i] * 100, 2),
+                    "rouge2": round(scores["rouge2"][i] * 100, 2),
+                    "rougeL": round(scores["rougeL"][i] * 100, 2),
+                    "rougeLsum": round(scores["rougeLsum"][i] * 100, 2),
+                }
+                for i in range(len(preds))
+            ]
         except (KeyError, IndexError, TypeError) as e:
             print(f"Error in compute_batch: {e}")
-            return [{'rouge1': 0.0, 'rouge2': 0.0, 'rougeL': 0.0, 'rougeLsum': 0.0}] * len(preds)
+            return [
+                {"rouge1": 0.0, "rouge2": 0.0, "rougeL": 0.0, "rougeLsum": 0.0}
+            ] * len(preds)
+
 
 class Model:
     """
     Class for loading models and generating texts in batches.
     """
-    def __init__(self, model_path: str, device: torch.device):
-        self.model = AutoModelForSeq2SeqLM.from_pretrained(model_path, torch_dtype=torch.float16 if device.type == 'cuda' else None).to(device)
-        self.tokenizer = AutoTokenizer.from_pretrained(model_path)
+
+    def __init__(self, model_path: str, device: torch.device, cache_dir: str = None):
+        self.model = AutoModelForSeq2SeqLM.from_pretrained(
+            model_path,
+            torch_dtype=torch.float16 if device.type == "cuda" else None,
+            cache_dir=cache_dir,
+        ).to(device)
+        self.tokenizer = AutoTokenizer.from_pretrained(model_path, cache_dir=cache_dir)
         self.device = device
         self.model.eval()
-        
+
     def generate(self, input_texts: List[str]) -> List[str]:
         """
         Generate text from the input list of strings using the model.
@@ -254,11 +270,14 @@ class Model:
             List[str]: List of generated texts.
         """
         with torch.no_grad():
-            inputs = self.tokenizer(input_texts, return_tensors="pt", padding=True, truncation=True, max_length=512).to(self.device)
+            inputs = self.tokenizer(
+                input_texts,
+                return_tensors="pt",
+                padding=True,
+                truncation=True,
+                max_length=512,
+            ).to(self.device)
             generated_ids = self.model.generate(
-                inputs.input_ids,
-                max_length=30,
-                num_beams=4,
-                early_stopping=True
+                inputs.input_ids, max_length=30, num_beams=4, early_stopping=True
             )
             return self.tokenizer.batch_decode(generated_ids, skip_special_tokens=True)

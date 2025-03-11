@@ -119,7 +119,9 @@ def run_evaluation(args: argparse.Namespace) -> None:
 
     # Initialize components
     rouge_scorer = RougeScorer()
-    models = [Model(path, device) for path in config["model_paths"]]
+    models = [
+        Model(path, device, config["cache_dir"]) for path in config["model_paths"]
+    ]
     logger.info(f"Loaded models: {config['model_paths']}")
 
     # Load and prepare dataset
