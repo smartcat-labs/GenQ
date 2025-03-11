@@ -637,7 +637,7 @@ Some low-similarity outliers still achieve moderate ROUGE scores, suggesting sur
     <table style="width:100%">
       <tr>
         <td style="width:65%">
-          <img src="images/escii/average_scores_by_model.png" alt="Average scores by model" class="model-analysis">
+          <img src="images/esci/average_scores_by_model.png" alt="Average scores by model" class="model-analysis">
         </td>
         <td>
           The figure presents a comparison of ROUGE scores between GenQ-TDC-v1 (checkpoint-41448) and the base model (query-gen-msmarco-t5-base-v1).  
@@ -655,7 +655,7 @@ Some low-similarity outliers still achieve moderate ROUGE scores, suggesting sur
     <table style="width:100%">
       <tr>
         <td style="width:65%">
-          <img src="images/escii/semantic_similarity_distribution.png" alt="Semantic similarity distribution" class="model-analysis">
+          <img src="images/esci/semantic_similarity_distribution.png" alt="Semantic similarity distribution" class="model-analysis">
         </td>
         <td>
           The figure shows the distribution of semantic similarity scores (cosine similarity between the generated queries and real user queries.  
