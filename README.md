@@ -40,16 +40,16 @@
 🤖 ✨ 🔍 Generate precise, realistic user-focused search queries from text 🛒 🚀 📊
 
 ## Introduction
-This project contains the scripts used to create the fine-tuned model GenQ. 
-This model has been specifically designed to generate high-quality queries for e-commerce products and also articles, achieving improved performance compared to the base model.
+This project contains the code used to create the fine-tuned model GenQ. 
+This model has been specifically designed to generate high-quality customer-like queries for e-commerce products, achieving improved performance compared to the base model.
 
 This repository serves as a comprehensive resource for:
 
-**Data Preprocessing**: Scripts and utilities for preparing the dataset used in fine-tuning, ensuring a robust and effective training process.  
+- **Data Preprocessing**: Scripts and utilities for preparing the dataset used in fine-tuning, ensuring a robust and effective training process.  
 
-**Model Fine-Tuning**: Code and configurations for fine-tuning the base model on the customized dataset.  
+- **Model Fine-Tuning**: Code and configurations for fine-tuning the base model on the customized dataset.  
 
-**Performance Insights**: Configurations and examples showcasing the model's performance improvements and applications.  
+- **Performance Insights**: Configurations and examples showcasing the model's performance improvements and applications.  
 
 By leveraging the GenQ model, e-commerce platforms and others can enhance search quality and generate more relevant queries tailored to their products.  
 Whether you're looking to understand the data preparation process, fine-tune your own model, or integrate this solution into your workflow, this repository has you covered.  
@@ -75,17 +75,17 @@ Whether you're looking to understand the data preparation process, fine-tune you
 <strong>Model Name:</strong> Fine-Tuned Query-Generation Model <br>
 <strong>Model Type:</strong> Text-to-Text Transformer <br>
 <strong>Architecture:</strong> Based on a pre-trained transformer model: [BeIR/query-gen-msmarco-t5-base-v1](https://huggingface.co/BeIR/query-gen-msmarco-t5-base-v1) <br>
-<strong>Primary Use Case:</strong> Generating accurate and relevant search queries from product descriptions or articles<br>
+<strong>Primary Use Case:</strong> Generating accurate and relevant human-like search queries from product descriptions or articles<br>
 <strong>Dataset:</strong> [smartcat/Amazon-2023-GenQ](https://huggingface.co/datasets/smartcat/Amazon-2023-GenQ)<br>
    
 <br>
 
 There are four models in our [collection](https://huggingface.co/collections/smartcat/product2query-6783f6786b250284f060918d) that are trained differently, with **T5-GenQ-TDC-v1** being our best performing model.
 
-**T5-GenQ-T-v1**: Trained on only the product titles  
-**T5-GenQ-TD-v1**: Trained on titles + descriptions of the products  
-**T5-GenQ-TDE-v1**: Trained on titles + descriptions of the products and a set of products with titles only (2x of the dataset)  
-**T5-GenQ-TDC-v1**: Trained on titles + descriptions of the products and a subset of products with titles only that had a similarity score with short queries above 85%
+- **T5-GenQ-T-v1**: Trained on only the product titles  
+- **T5-GenQ-TD-v1**: Trained on titles + descriptions of the products  
+- **T5-GenQ-TDE-v1**: Trained on titles + descriptions of the products and a set of products with titles only (2x of the dataset)  
+- **T5-GenQ-TDC-v1**: Trained on titles + descriptions of the products and a subset of products with titles only that had a similarity score with short queries above 85%
 
 
 ## Training
@@ -155,10 +155,10 @@ The results of our model variations are:
     <td><b>T5-GenQ-TDC-v1</b></td>
     <td>8.0</td>
     <td>41448</td>
-    <td><u>80.0754</u></td>
-    <td><u>61.5974</u></td>
-    <td><b><u>79.3557</u></b></td>
-    <td><u>79.3427</u></td>
+    <td><u><strong>80.0754</strong></u></td>
+    <td><u><strong>61.5974</strong></u></td>
+    <td><b><u><strong>79.3557</strong></u></b></td>
+    <td><u><strong>79.3427</strong></u></td>
   </tr>
 </table>
 
@@ -168,7 +168,7 @@ A6000 GPU:
 <ul>
   <li>Memory Size: 48 GB</li>
   <li>Memory Type: GDDR6</li>
-  <li>CUDA: 8.6</li>
+  <li>CUDA: 12.4</li>
 </ul>
 
 ## Setup
