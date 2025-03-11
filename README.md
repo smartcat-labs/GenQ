@@ -225,9 +225,12 @@ python -m modules.eval.results_analysis config/analysis_config.yaml
 ## Usage
 
 ### Intended use
-This model is designed to enhance search functionality by generating user-friendly search queries based on textual descriptions. It is particularly suited for applications where descriptive text is the primary input, and the goal is to create concise, relevant queries that align with user search intent.  
+This model is designed to enhance search functionality by generating user-like search queries based on textual descriptions. It is particularly suited for applications where product/item text is the primary input, and the goal is to create concise, relevant queries that align with user search intent.  
 ### Examples of Use:
 <li>Generating search queries for product or article indexing.</li>
+<li>Query typeahead also sometimes known as autocomplete.</li>
+<li>Improving keyword and semantic search.</li>
+<li>Dataset generation for embedding or re-ranker models.</li>
 <li>Enhancing product discoverability in e-commerce search engines.</li>
 <li>Automating query generation for catalog management.</li>
    
