@@ -96,41 +96,50 @@ Script Workflow
 nltk.download("punkt", quiet=True)
 nltk.download("punkt_tab", quiet=True)
 
-def run_evaluation(config: dict) -> None:
+
+def run_evaluation(args: argparse.Namespace) -> None:
     """
     Run the evaluation pipeline using the provided configuration.
 
     Args:
         config (dict): The configuration dictionary.
     """
-    
+    config = load_config(args.config, type="eval")
+
     device = get_device()
     dt = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-    output_path = Path(f"modules/eval/runs/{dt}")
+    output_path = Path(args.output_path) / f"eval_{dt}"
     output_path.mkdir(parents=True, exist_ok=True)
 
     logger.add(f"{output_path}/eval.log", level=config["log_level"])
     logger.info("=======Starting=======")
-    with open(f"{output_path}/eval_config.yaml", 'w') as file:
+    with open(f"{output_path}/eval_config.yaml", "w") as file:
         yaml.dump(config, file, default_flow_style=False)
     logger.info(f"Configuration saved to '{output_path}/eval_config.yaml'")
-    
+
     # Initialize components
     rouge_scorer = RougeScorer()
-    models = [Model(path, device) for path in config['model_paths']]
+    models = [Model(path, device) for path in config["model_paths"]]
     logger.info(f"Loaded models: {config['model_paths']}")
 
-
     # Load and prepare dataset
-    dataset = load_dataset(config['dataset'], name=config['name'], split=config['split'])
-    if config.get('sample'):
-        dataset = dataset.shuffle(config['seed']).select(range(config['sample']))
-        
+    dataset = load_dataset(
+        config["dataset"], name=config["name"], split=config["split"]
+    )
+    if config.get("sample"):
+        dataset = dataset.shuffle(config["seed"]).select(range(config["sample"]))
+
     logger.info(f"Loaded dataset {config['dataset']}, with {len(dataset)} examples.")
 
     # Preprocess targets once
-    dataset = dataset.map(lambda x: {'preprocessed_target': '\n'.join(sent_tokenize(str(x[config['label_text_column']])))},
-                          load_from_cache_file=False)
+    dataset = dataset.map(
+        lambda x: {
+            "preprocessed_target": "\n".join(
+                sent_tokenize(str(x[config["label_text_column"]]))
+            )
+        },
+        load_from_cache_file=False,
+    )
 
     # Prepare dataloader
     def collate_fn(batch: List[dict]) -> dict:
@@ -144,62 +153,78 @@ def run_evaluation(config: dict) -> None:
             dict: A dictionary containing processed batch data.
         """
         return {
-            'input_texts': ['\n\n'.join([str(x[col]) for col in config['input_text_columns']]) for x in batch],
-            'targets': [x['preprocessed_target'] for x in batch],
-            'metadata': [
-                tuple(str(x.get(col, "")) for col in config["input_text_columns"]) for x in batch],
+            "input_texts": [
+                "\n\n".join([str(x[col]) for col in config["input_text_columns"]])
+                for x in batch
+            ],
+            "targets": [x["preprocessed_target"] for x in batch],
+            "metadata": [
+                tuple(str(x.get(col, "")) for col in config["input_text_columns"])
+                for x in batch
+            ],
         }
 
-    dataloader = DataLoader(dataset, batch_size=config['batch_size'], collate_fn=collate_fn)
+    dataloader = DataLoader(
+        dataset, batch_size=config["batch_size"], collate_fn=collate_fn
+    )
     logger.info(f"Prepared batches of size {config['batch_size']}.")
 
     # Prepare CSV
     csv_path = output_path / "generated_results.csv"
-    with open(csv_path, 'w', newline='', encoding='utf-8') as f:
+    with open(csv_path, "w", newline="", encoding="utf-8") as f:
         writer = csv.writer(f)
-        writer.writerow([
-            *config["input_text_columns"],
-            "input_text",
-            "target_query",
-            "model",
-            "generated_output",
-            "rouge1",
-            "rouge2",
-            "rougeL",
-            "rougeLsum",
-        ])
+        writer.writerow(
+            [
+                *config["input_text_columns"],
+                "input_text",
+                "target_query",
+                "model",
+                "generated_output",
+                "rouge1",
+                "rouge2",
+                "rougeL",
+                "rougeLsum",
+            ]
+        )
     logger.info("Initialized csv.")
 
     # Evaluation loop
     for batch in tqdm(dataloader, desc="Evaluating"):
-        input_texts = batch['input_texts']
-        targets = batch['targets']
-        metadata = batch['metadata']
+        input_texts = batch["input_texts"]
+        targets = batch["targets"]
+        metadata = batch["metadata"]
 
         rows = []
         for model in models:
             generated = model.generate(input_texts)
-            processed_gen = ['\n'.join(sent_tokenize(g.strip())) for g in generated]
+            processed_gen = ["\n".join(sent_tokenize(g.strip())) for g in generated]
             scores = rouge_scorer.compute_batch(processed_gen, targets)
-            
-            for meta, inp, tgt, gen, score in zip(metadata, input_texts, targets, generated, scores):
-                rows.append([
-                    *meta,
-                    inp,
-                    tgt,
-                    os.path.basename(model.tokenizer.name_or_path), #This is simpler for handling both local and HF models
-                    gen,
-                    score["rouge1"],
-                    score["rouge2"],
-                    score["rougeL"],
-                    score["rougeLsum"],
-                ])
+
+            for meta, inp, tgt, gen, score in zip(
+                metadata, input_texts, targets, generated, scores
+            ):
+                rows.append(
+                    [
+                        *meta,
+                        inp,
+                        tgt,
+                        os.path.basename(
+                            model.tokenizer.name_or_path
+                        ),  # This is simpler for handling both local and HF models
+                        gen,
+                        score["rouge1"],
+                        score["rouge2"],
+                        score["rougeL"],
+                        score["rougeLsum"],
+                    ]
+                )
 
         # Batch write to CSV
-        with open(csv_path, 'a', newline='', encoding='utf-8') as f:
+        with open(csv_path, "a", newline="", encoding="utf-8") as f:
             csv.writer(f).writerows(rows)
 
     logger.info(f"Evaluation complete. Results saved to {csv_path}")
+
 
 def main():
 
@@ -207,11 +232,17 @@ def main():
     parser.add_argument(
         "-c", "--config", type=str, required=True, help="Path to the config file"
     )
+    parser.add_argument(
+        "-o",
+        "--output_path",
+        type=str,
+        default="results",
+        help="Evaluation output path",
+    )
     args = parser.parse_args()
 
-    config = load_config(args.config, type="eval")
+    run_evaluation(args)
 
-    run_evaluation(config)
 
 if __name__ == "__main__":
     main()
