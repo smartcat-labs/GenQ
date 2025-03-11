@@ -69,15 +69,15 @@ def process_data(data: DataConfig, tokenizer: AutoTokenizer) -> DatasetDict:
     logger.info(f"Loaded dataset: {data.dataset_path}")
 
     if data.dev:
-        split_percentage = "[:1%]"
+        split_samples = "[:100]"
     else:
-        split_percentage = ""
+        split_samples = ""
 
     train_subset, test_subset = load_dataset(
         data.dataset_path,
         name=data.dataset_subset,
         cache_dir=data.cache_dir,
-        split=["train" + split_percentage, "test" + split_percentage],
+        split=["train" + split_samples, "test" + split_samples],
     )
 
     dataset_hf = DatasetDict({"train": train_subset, "test": test_subset})
