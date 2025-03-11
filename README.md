@@ -208,16 +208,16 @@ To check out each checkpoint, you can run the evaluation.
 ### Evaluation
 The evaluation consists of generating queries with two models and calculating the results of each ROUGE metric. In our case, we ran the evaluation with the pre-trained model and our fine-tuned model.  
 
-For running the evaluation, prepare the **eval_config.yaml** file. You must set the ```model_paths``` in the file to your checkpoint path to test out your model. If you don't want to modify the file you can simply run the evaluation with:
+For running the evaluation, prepare the **eval_config.yaml** file. You must set the `model_paths` in the file to your checkpoint path to test out your model. If you don't want to modify the file you can simply run the evaluation with:
 ```bash
 python -m modules.eval.model_eval -c config/eval_config.yaml
 ```
 This will run the evaluation with our fine-tuned model by default.   
 
-After it's finished, you can look at the results in the **generated_results.csv** saved to eval\runs\date_time\ by default.  
+After it's finished, you can look at the results in the **generated_results.csv** saved to `eval/date_time/` by default.  
 
-For further analysis use the **results_analysis.py** script with your **generated_results.csv** to create plots and see specific cases where your model had better/worse results.
-To run the script, specify in the **analysis_config.yaml** file the path to your generated results, set the parameters to your liking and run the script with:
+For further analysis use the `results_analysis.py` script with your `generated_results.csv` to create plots and see specific cases where your model had better or worse results.
+To run the script, specify in the `analysis_config.yaml` file the path to your generated results, set the parameters to your liking and run the script with:
 ```bash
 python -m modules.eval.results_analysis config/analysis_config.yaml
 ```
