@@ -181,8 +181,13 @@ git clone https://github.com/smartcat-labs/product2query.git
 For installing and setting up poetry:
 [Poetry Documentation](https://python-poetry.org/docs/)
 
-After installing and setting up poetry, run   
-```python
+To maintain organization, configure Poetry to create a virtual environment in the project's directory:
+```bash
+poetry config virtualenvs.in-project true
+```
+
+After installing and setting up poetry, run:
+```bash
 poetry install --no-root
 ```  
 to install all necessary dependencies
