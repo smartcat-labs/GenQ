@@ -1,6 +1,0 @@
-streamlit
-transformers
-transformers[torch]
-sentencepiece
-nltk
-torch

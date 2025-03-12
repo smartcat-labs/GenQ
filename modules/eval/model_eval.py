@@ -97,13 +97,12 @@ Script Workflow
 nltk.download("punkt", quiet=True)
 nltk.download("punkt_tab", quiet=True)
 
-
 def run_evaluation(args: argparse.Namespace) -> None:
     """
     Run the evaluation pipeline using the provided configuration.
 
     Args:
-        config (dict): The configuration dictionary.
+        args (argparse.Namespace): The configuration.
     """
     config = load_config(args.config, type="eval")
 
@@ -227,7 +226,6 @@ def run_evaluation(args: argparse.Namespace) -> None:
             csv.writer(f).writerows(rows)
 
     logger.info(f"Evaluation complete. Results saved to {csv_path}")
-
 
 def main():
 

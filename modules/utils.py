@@ -8,7 +8,6 @@ from pathlib import Path
 from evaluate import load
 from typing import List
 
-
 def get_device() -> torch.device:
     """
     Returns the best available device (CUDA, MPS, or CPU).
@@ -25,7 +24,6 @@ def get_device() -> torch.device:
 
     logger.info(f"Using device: {device}")
     return device
-
 
 def load_config(config_file: str, type: str) -> dict:
     """
@@ -203,7 +201,6 @@ class PrinterCallback(TrainerCallback):
 
             # Remove this entry from memory since we've written it out
             del self.metrics_by_step[epoch_step_key]
-
 
 class RougeScorer:
     """

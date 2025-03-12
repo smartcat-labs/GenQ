@@ -30,9 +30,9 @@ Script for fine-tuning a base model for text-to-query generation.
     1. Prepare a configuration file (YAML format) specifying:
        - Model checkpoint, training arguments, data paths, and evaluation settings.
     2. Execute the script from the terminal:
-        python -m modules.train.train -c config/config.yaml -o 'finetuned-amazon-product2query' --log_level INFO 
+        python -m modules.train.train -c config/config.yaml -o 'results' --log_level INFO 
     (Optional) to run on a smaller percentage of the dataset execute the script from the terminal with:
-        python -m modules.train.train -c config/test_config.yaml -o 'finetuned-amazon-product2query' --log_level INFO
+        python -m modules.train.train -c config/test_config.yaml -o 'results' --log_level INFO
     Example configuration file (config.yaml):
     --------------------------------------------------
     data:
