@@ -9,7 +9,6 @@ data:
   dev: true
   seed: 0
 train:
-  output_dir_name: finetuned-amazon-product2query
   model_checkpoint: BeIR/query-gen-msmarco-t5-base-v1
   metrics: rouge
   batch_size: 16

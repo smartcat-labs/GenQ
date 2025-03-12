@@ -4,7 +4,7 @@ from transformers import (
     AutoModelForSeq2SeqLM,
     Seq2SeqTrainingArguments,
     Seq2SeqTrainer,
-    DataCollatorForSeq2Seq
+    DataCollatorForSeq2Seq,
 )
 from pathlib import Path
 from loguru import logger
@@ -44,9 +44,10 @@ Script for fine-tuning a base model for text-to-query generation.
         max_target_length: 30
         cache_dir: ./cache
         dev: false
+        seed: 0
     train:
         model_checkpoint: example-t5-base
-        output_dir_name: finetuned-model-output
+        metrics: rouge
         evaluation_strategy: epoch
         learning_rate: 5e-5
         batch_size: 16
@@ -85,7 +86,7 @@ def parse_args() -> argparse.Namespace:
         "-c", "--config", type=str, required=True, help="Path to the config file"
     )
     parser.add_argument(
-        "-o", "--output_path", type=str, default="finetuned-amazon-product2query", help="Model output path"
+        "-o", "--output_path", type=str, default="results", help="Model output path"
     )
     parser.add_argument(
         "--log_level",
@@ -94,59 +95,81 @@ def parse_args() -> argparse.Namespace:
         default="INFO",
         help="Set the logging level",
     )
-    parser.add_argument("--save_config", action="store_true", help="Save the configuration as YAML for reference")
+    parser.add_argument(
+        "--save_config",
+        action="store_true",
+        help="Save the configuration as YAML for reference",
+    )
 
     return parser.parse_args()
 
 
-
 def run_training(args: argparse.Namespace) -> None:
-    """Main function to run training pipeline."""
+    """Main function to run training pipeline.
+    
+    Steps:
+        1. Initializes logging and sets up output directories.
+        2. Loads configuration from YAML and saves a copy.
+        3. Loads pre-trained model and tokenizer.
+        4. Processes the dataset (tokenization and formatting).
+        5. Configures training arguments (`Seq2SeqTrainingArguments`).
+        6. Initializes `Seq2SeqTrainer` and begins training.
+        7. Saves the final trained model.
+
+    Args:
+        args (argparse.Namespace): Parsed command-line arguments.
+
+    """
+    dt = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+    output_path = Path(args.output_path) / f"train_{dt}" / "models"
+    output_path.mkdir(parents=True, exist_ok=True)
     start_time = datetime.now().astimezone()
     config = Configuration.from_yaml(args.config)
 
-    config.to_yaml(f"{save_path}/config.yaml")  # Save the configuration
+    config.to_yaml(f"{output_path}/config.yaml")  # Save the configuration
 
-    logger.add(f"{save_path}/finetuning.log", level=args.log_level)
+    logger.add(f"{output_path}/finetuning.log", level=args.log_level)
     logger.info("=======Starting=======")
-    logger.info(f"Configuration saved to '{save_path}/config.yaml'")
+    logger.info(f"Configuration saved to '{output_path}/config.yaml'")
 
-    data = config.data
-    set_seed(seed=data.seed)
-    train = config.train
+    set_seed(seed=config.data.seed)
 
-    model = AutoModelForSeq2SeqLM.from_pretrained(train.model_checkpoint)
-    tokenizer = AutoTokenizer.from_pretrained(train.model_checkpoint)
+    model = AutoModelForSeq2SeqLM.from_pretrained(
+        config.train.model_checkpoint, cache_dir=config.data.cache_dir
+    )
+    tokenizer = AutoTokenizer.from_pretrained(
+        config.train.model_checkpoint, cache_dir=config.data.cache_dir
+    )
 
     device = get_device()
     model.to(device=device)
 
-    logger.info(f"Model and Tokenizer: {train.model_checkpoint} is ready.")
+    logger.info(f"Model and Tokenizer: {config.train.model_checkpoint} is ready.")
 
-    tokenized_datasets = process_data(data, tokenizer)
+    tokenized_datasets = process_data(config.data, tokenizer)
 
     # Show the training loss with every epoch
     logging_steps = max(1, len(tokenized_datasets["train"]) // config.train.batch_size)
     logger.info(f"Logging every {logging_steps} steps")
 
     args = Seq2SeqTrainingArguments(
-        output_dir=f"{save_path}/{train.output_dir_name}",
-        eval_strategy=train.evaluation_strategy,
-        learning_rate=train.learning_rate,
-        per_device_train_batch_size=train.batch_size,
-        per_device_eval_batch_size=train.batch_size,
-        weight_decay=train.weight_decay,
-        save_total_limit=train.save_total_limit,
-        num_train_epochs=train.num_train_epochs,
-        predict_with_generate=train.predict_with_generate,
+        output_dir=str(output_path),
+        eval_strategy=config.train.evaluation_strategy,
+        learning_rate=config.train.learning_rate,
+        per_device_train_batch_size=config.train.batch_size,
+        per_device_eval_batch_size=config.train.batch_size,
+        weight_decay=config.train.weight_decay,
+        save_total_limit=config.train.save_total_limit,
+        num_train_epochs=config.train.num_train_epochs,
+        predict_with_generate=config.train.predict_with_generate,
         logging_steps=logging_steps,
-        logging_strategy=train.logging_strategy,
-        save_strategy=train.save_strategy,
-        push_to_hub=train.push_to_hub,
-        load_best_model_at_end=train.load_best_model_at_end,
-        metric_for_best_model=train.metric_for_best_model,
-        greater_is_better=train.greater_is_better,
-        report_to=train.report_to,
+        logging_strategy=config.train.logging_strategy,
+        save_strategy=config.train.save_strategy,
+        push_to_hub=config.train.push_to_hub,
+        load_best_model_at_end=config.train.load_best_model_at_end,
+        metric_for_best_model=config.train.metric_for_best_model,
+        greater_is_better=config.train.greater_is_better,
+        report_to=config.train.report_to,
     )
     logger.info("Training arguments prepared.")
 
@@ -156,9 +179,9 @@ def run_training(args: argparse.Namespace) -> None:
         train_dataset=tokenized_datasets["train"],
         eval_dataset=tokenized_datasets["test"],
         data_collator=DataCollatorForSeq2Seq(tokenizer, model=model),
-        tokenizer=tokenizer,
+        processing_class=tokenizer,
         compute_metrics=lambda eval_pred: compute_metrics(eval_pred, tokenizer),
-        callbacks=[PrinterCallback(save_dir=save_path)],
+        callbacks=[PrinterCallback(save_dir=str(output_path))],
     )
 
     logger.info("Trainer initialized. 🚀 Starting training now!(^o^)")
@@ -166,17 +189,15 @@ def run_training(args: argparse.Namespace) -> None:
     # Start training
     trainer.train()
 
-    final_output_dir = f"{save_path}/{train.output_dir_name}/final"
+    final_output_dir = f"{str(output_path)}/final"
     model.save_pretrained(final_output_dir)
 
     elapsed_time = datetime.now().astimezone() - start_time
-    logger.success(f"Training completed in {str(elapsed_time).split('.')[0]} seconds ✅ ^ω^")
+    logger.success(
+        f"Training completed in {str(elapsed_time).split('.')[0]} seconds ✅ ^ω^"
+    )
+
 
 if __name__ == "__main__":
-    dt = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-    save_path = Path(f"modules/train/runs/{dt}")
-
-    save_path.mkdir(parents = True, exist_ok = True)
-
     args = parse_args()
     run_training(args)
